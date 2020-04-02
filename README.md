@@ -12,6 +12,7 @@ requirements yang ada. (Contoh: memberi nama trainer, memberi notifikasi
 kalau barang di shop sudah penuh, dan lain-lain).
 - Terdapat 2 code yaitu soal2_traizone.c dan soal2_pokezone.c.
 - soal2_traizone.c mengandung fitur:
+
 i. Normal Mode (3 Menu)
 1. Cari Pokemon
 - Jika diaktifkan maka setiap 10 detik akan memiliki
