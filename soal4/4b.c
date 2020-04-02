@@ -23,37 +23,48 @@ typedef unsigned long long ULL;
 //     return prod;
 // }
 
-int multiply(int x, int res[], int res_size) { 
-	int carry = 0;
+ULL factorialPlus(int n){
+    ULL prod = 1;
+    int k = 0;
+    while (k != n){
+        k++;
+        prod += k;
+    }
 
-	for (int i=0; i<res_size; i++) { 
-		int prod = res[i] * x + carry; 
-        
-        res[i] = prod % 10; 
-        
-        carry = prod/10;	 
-	} 
-
-	while (carry) { 
-		res[res_size] = carry%10; 
-		carry = carry/10; 
-		res_size++; 
-	} 
-	return res_size; 
+    return prod;
 }
 
-void factorial(int n) { 
-	int res[MAX]; 
+// int multiply(int x, int res[], int res_size) { 
+// 	int carry = 0;
 
-	res[0] = 1; 
-	int res_size = 1; 
+// 	for (int i=0; i<res_size; i++) { 
+// 		int prod = res[i] * x + carry; 
+        
+//         res[i] = prod % 10; 
+        
+//         carry = prod/10;	 
+// 	} 
 
-	for (int x=2; x<=n; x++) 
-		res_size = multiply(x, res, res_size); 
+// 	while (carry) { 
+// 		res[res_size] = carry%10; 
+// 		carry = carry/10; 
+// 		res_size++; 
+// 	} 
+// 	return res_size; 
+// }
 
-	for (int i=res_size-1; i>=0; i--) 
-		printf("%d", res[i]);
-}  
+// void factorial(int n) { 
+// 	int res[MAX]; 
+
+// 	res[0] = 1; 
+// 	int res_size = 1; 
+
+// 	for (int x=2; x<=n; x++) 
+// 		res_size = multiply(x, res, res_size); 
+
+// 	for (int i=res_size-1; i>=0; i--) 
+// 		printf("%d", res[i]);
+// }  
 
 pthread_t tid[3];
 pid_t child;
@@ -66,32 +77,32 @@ void* factOut(void *arg){
 
         for(i = 0; i < 2; i++){
             for(j = 0; j < 5; j++){
-                // res[i][j] = factorial(res[i][j]);
-                factorial(res[i][j]);
-                printf("\t");
+                res[i][j] = factorialPlus(res[i][j]);
+                // factorial(res[i][j]);
+                // printf("\t");
             }
-            printf("\n");
+            // printf("\n");
         }
 	}
 	else if(pthread_equal(id,tid[1])){
 
         for(i = 2; i < 4; i++){
             for(j = 0; j < 5; j++){
-                // res[i][j] = factorial(res[i][j]);
-                factorial(res[i][j]);
-                printf("\t");
+                res[i][j] = factorialPlus(res[i][j]);
+                // factorial(res[i][j]);
+                // printf("\t");
+            }
+            // printf("\n");
+        }
+	}
+	else if(pthread_equal(id,tid[2])){
+        for(i = 0; i < 4; i++){
+            for(j = 0; j < 5; j++){
+                printf("%llu\t", res[i][j]);
             }
             printf("\n");
         }
 	}
-	// else if(pthread_equal(id,tid[2])){
-    //     for(i = 0; i < 4; i++){
-    //         for(j = 0; j < 5; j++){
-    //             printf("%llu\t", res[i][j]);
-    //         }
-    //         printf("\n");
-    //     }
-	// }
 
 	return NULL;
 }
@@ -116,7 +127,7 @@ int main(void){
 	}
 
 	pthread_join(tid[1],NULL);
-	// pthread_join(tid[2],NULL);
+	pthread_join(tid[2],NULL);
 
     shmdt(res);
     shmctl(shmid, IPC_RMID, NULL);
