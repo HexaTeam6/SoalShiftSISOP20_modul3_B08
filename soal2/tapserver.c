@@ -9,7 +9,9 @@
 #define PORT 8080
 
 pthread_t tid[100];
+int id_sock[2];
 int user = 0;
+int kalah = 0;
 
 void* player(void *arg) {
     int new_socket = *(int *)arg;
@@ -99,14 +101,37 @@ void* player(void *arg) {
                     send(new_socket, "two", 3, 0);
                 }
 
-
-                // if(menang) == 0) {
-                //     send(new_socket, "menang", 6, 0);
-                // }
-                // if(kalah) == 0) {
-                //     send(new_socket, "kalah", 5, 0);
-                // }
+                while(1) {
+                    memset(buffer, 0, 1024);
+                    valread = read( new_socket, buffer, 1024);
+                    if (strcmp(buffer, "hit") == 0)
+                    {
+                        if(new_socket == id_sock[0])
+                        {
+                            send(id_sock[1], "minus", 5, 0);
+                        }
+                        if(new_socket == id_sock[1])
+                        {
+                            send(id_sock[0], "minus", 5, 0);
+                        }
+                    }
+                    if (strcmp(buffer, "die") == 0)
+                    {
+                        if(new_socket == id_sock[0])
+                        {
+                            send(id_sock[1], "menang", 6, 0);
+                            send(id_sock[0], "kalah", 5, 0);
+                        }
+                        if(new_socket == id_sock[1])
+                        {
+                            send(id_sock[0], "menang", 6, 0);
+                            send(id_sock[1], "kalah", 5, 0);
+                        }
+                        break;
+                    }
+                }
                 screen = 2;
+                user--;
             }
             if(strcmp(buffer, "logout") == 0) {
                 user--;
@@ -154,6 +179,7 @@ int main(int argc, char const *argv[]) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
+        id_sock[i] = new_socket;
         pthread_create(&(tid[i]), NULL, player, &new_socket);
         i++;
     }
