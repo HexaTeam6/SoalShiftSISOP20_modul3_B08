@@ -4,18 +4,126 @@
 #include <netinet/in.h>
 #include <string.h>
 #include <unistd.h>
-// #include <netinet/in.h>
+#include <pthread.h>
 #include <arpa/inet.h>
 #define PORT 8080
 
+pthread_t tid[100];
+int user = 0;
+
+void* player(void *arg) {
+    int new_socket = *(int *)arg;
+    int valread;
+    char buffer[1024] = {0};
+    int screen = 1;
+    char nama[100], pass[100];
+    // printf("new_socket %d\n", new_socket);
+
+    FILE *pf;
+    pf = fopen("akun.txt", "a");
+    if(pf == NULL)
+    {
+        printf("Create file failed\n");
+        exit(EXIT_FAILURE);
+    }
+    fclose(pf);
+
+    while(1) {
+        if(screen == 1) {
+            memset(buffer, 0, 1024);
+            valread = read( new_socket, buffer, 1024);
+            printf("Pertama : %s\n", buffer);
+            if(strcmp(buffer, "register") == 0) {
+                memset(buffer, 0, 1024);
+                valread = read( new_socket, buffer, 1024);
+                // printf("regis %s\n", buffer);
+                pf = fopen("akun.txt", "a");
+                fprintf(pf, "%s\n", buffer);
+                memset(buffer, 0, 1024);
+                fclose(pf);
+
+                char line[100]={0};
+                pf = fopen("akun.txt", "r");
+                printf("--- List Account Terdaftar ---\n");
+                while(fgets(line, sizeof(line), pf) != NULL){
+                    sscanf(line, "%[^|]||%[^\n]s", nama, pass);
+                    printf("Username : %s\n Password : %s\n", nama, pass);
+                    memset(nama, 0, 100);
+                    memset(pass, 0, 100);
+                }
+                fclose(pf);
+                screen = 2;
+            }
+            if(strcmp(buffer, "login") == 0) {
+                memset(buffer, 0, 1024);
+                valread = read( new_socket, buffer, 1024);
+                // printf("login %s\n", buffer);
+
+                int catch = 0;
+                char line[100]={0};
+                pf = fopen("akun.txt", "r");
+                while(fgets(line, sizeof(line), pf) != NULL){
+                    if(strcmp(line, buffer) == 0) {
+                        // printf("catch\n");
+                        catch = 1;
+                    }
+                }
+                fclose(pf);
+                if(catch == 1) {
+                    send(new_socket , "login_berhasil", 14 , 0 );
+                    printf("Auth success\n");
+                    screen = 2;
+                }
+                else {
+                    send(new_socket , "login_gagal", 11 , 0 );
+                    printf("Auth failed\n");
+                    screen = 1;
+                }
+                memset(buffer, 0, 1024);
+            }
+        }
+
+        if(screen == 2) {
+            memset(buffer, 0, 1024);
+            valread = read( new_socket, buffer, 1024);
+            printf("Kedua : %s\n", buffer);
+            if(strcmp(buffer, "find") == 0) {
+                user++;
+                while(user < 2) {
+                    // printf("Send one  %d\n", user);
+                    send(new_socket, "one", 3, 0);
+                    sleep(1);
+                }
+                if(user >= 2) {
+                    // printf("Send two %d\n", user);
+                    send(new_socket, "two", 3, 0);
+                }
+
+
+                // if(menang) == 0) {
+                //     send(new_socket, "menang", 6, 0);
+                // }
+                // if(kalah) == 0) {
+                //     send(new_socket, "kalah", 5, 0);
+                // }
+                screen = 2;
+            }
+            if(strcmp(buffer, "logout") == 0) {
+                user--;
+                memset(buffer, 0, 1024);
+                screen = 1;
+            }
+        }
+    }
+}
+
 int main(int argc, char const *argv[]) {
+
     int server_fd, new_socket, valread;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
-    char buffer[1024] = {0};
-    char *hello = "Hello from server";
-      
+
     if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
         perror("socket failed");
         exit(EXIT_FAILURE);
@@ -40,120 +148,15 @@ int main(int argc, char const *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    // Buat akun.txt
-    FILE *pf;
-    pf = fopen("akun.txt", "a");
-    if(pf == NULL)
-    {
-        printf("Create file failed\n");
-        exit(EXIT_FAILURE);
-    }
-    fclose(pf);
-
-    pid_t c_pid;
-    int screen = 1, player = 0;
-    char nama[100], pass[100];
-
+    int i = 0;
     while(1) {
         if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
-        printf("Connection accepted from %s:%d\n", inet_ntoa(address.sin_addr), ntohs(address.sin_port));
-
-        c_pid = fork();
-        if(c_pid == 0) {
-            while(1) {
-                if(screen == 1) {
-                    memset(buffer, 0, 1024);
-                    valread = read( new_socket, buffer, 1024);
-                    printf("Pertama : %s\n", buffer);
-                    if(strcmp(buffer, "register") == 0) {
-                        memset(buffer, 0, 1024);
-                        valread = read( new_socket, buffer, 1024);
-                        // printf("regis %s\n", buffer);
-                        pf = fopen("akun.txt", "a");
-                        fprintf(pf, "%s\n", buffer);
-                        memset(buffer, 0, 1024);
-                        fclose(pf);
-
-                        char line[100]={0};
-                        pf = fopen("akun.txt", "r");
-                        printf("--- List Account Terdaftar ---\n");
-                        while(fgets(line, sizeof(line), pf) != NULL){
-                            sscanf(line, "%[^|]||%[^\n]s", nama, pass);
-                            printf("Username : %s\n Password : %s\n", nama, pass);
-                            memset(nama, 0, 100);
-                            memset(pass, 0, 100);
-                        }
-                        fclose(pf);
-                        screen = 2;
-                    }
-                    if(strcmp(buffer, "login") == 0) {
-                        memset(buffer, 0, 1024);
-                        valread = read( new_socket, buffer, 1024);
-                        // printf("login %s\n", buffer);
-
-                        int catch = 0;
-                        char line[100]={0};
-                        pf = fopen("akun.txt", "r");
-                        while(fgets(line, sizeof(line), pf) != NULL){
-                            if(strcmp(line, buffer) == 0) {
-                                // printf("catch\n");
-                                catch = 1;
-                            }
-                        }
-                        fclose(pf);
-                        if(catch == 1) {
-                            send(new_socket , "login_berhasil", 14 , 0 );
-                            printf("Auth success\n");
-                            screen = 2;
-                        }
-                        else {
-                            send(new_socket , "login_gagal", 11 , 0 );
-                            printf("Auth failed\n");
-                            screen = 1;
-                        }
-                        memset(buffer, 0, 1024);
-                    }
-                }
-
-                if(screen == 2) {
-                    memset(buffer, 0, 1024);
-                    valread = read( new_socket, buffer, 1024);
-                    printf("Kedua : %s\n", buffer);
-                    if(strcmp(buffer, "find") == 0) {
-                        player++;
-                        while(player < 2) {
-                            printf("Send one  %d\n", player);
-                            send(new_socket, "one", 3, 0);
-                            sleep(1);
-                        }
-                        if(player >= 2) {
-                            printf("Send two %d\n", player);
-                            send(new_socket, "two", 3, 0);
-                        }
-
-
-                        // if(menang) == 0) {
-                        //     send(new_socket, "menang", 6, 0);
-                        // }
-                        // if(kalah) == 0) {
-                        //     send(new_socket, "kalah", 5, 0);
-                        // }
-                        screen = 2;
-                    }
-                    if(strcmp(buffer, "logout") == 0) {
-                        memset(buffer, 0, 1024);
-                        screen = 1;
-                    }
-                }
-            }
-        }
+        pthread_create(&(tid[i]), NULL, player, &new_socket);
+        i++;
     }
-
-    // send(new_socket , hello , strlen(hello) , 0 );
-    // printf("Hello message sent\n");
 
     return 0;
 }

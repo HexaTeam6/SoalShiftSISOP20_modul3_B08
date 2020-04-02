@@ -32,7 +32,6 @@ int main(int argc, char const *argv[]) {
         return -1;
     }
 
-
     int screen = 1; // Buat screen
     char comma[10], commb[10], nama[100], pass[100], data[100], spc;
 
@@ -132,9 +131,5 @@ int main(int argc, char const *argv[]) {
 
     }
 
-    // send(sock , msg , strlen(msg) , 0 );
-    // printf("Hello message sent\n");
-    // valread = read( sock , buffer, 1024);
-    // printf("%s\n",buffer );
     return 0;
 }
