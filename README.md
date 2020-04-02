@@ -6,60 +6,59 @@ Soal Shift Modul 3 yang berfokus pada penggunaan thread, socket, fork, dan pipes
 
 Poke*ZONE adalah sebuah game berbasis text terminal mirip dengan Pokemon GO.
 Ketentuan permainan sebagai berikut:
-a. Menggunakan IPC-shared memory, thread, fork-exec.
-b. Kalian bebas berkreasi dengan game ini asal tidak konflik dengan
+- Menggunakan IPC-shared memory, thread, fork-exec.
+- Kalian bebas berkreasi dengan game ini asal tidak konflik dengan
 requirements yang ada. (Contoh: memberi nama trainer, memberi notifikasi
 kalau barang di shop sudah penuh, dan lain-lain).
-c. Terdapat 2 code yaitu soal2_traizone.c dan soal2_pokezone.c.
-d. soal2_traizone.c mengandung fitur:
+- Terdapat 2 code yaitu soal2_traizone.c dan soal2_pokezone.c.
+- soal2_traizone.c mengandung fitur:
 i. Normal Mode (3 Menu)
 1. Cari Pokemon
-a. Jika diaktifkan maka setiap 10 detik akan memiliki
+- Jika diaktifkan maka setiap 10 detik akan memiliki
 60% chance untuk menemui pokemon bertipe normal,
 rare, legendary dengan encounter rate sesuai pada
 tabel di bawah (Gunakan Thread).
-b. Cari pokemon hanya mengatur dia menemukan
+- Cari pokemon hanya mengatur dia menemukan
 pokemon atau tidak. Untuk tipe pokemon dan pokemon
 tersebut shiny atau tidak diatur oleh soal2_pokezone.c.
-c. Opsi “Cari Pokemon” akan berubah jadi “Berhenti
+- Opsi “Cari Pokemon” akan berubah jadi “Berhenti
 Mencari” ketika state mencari pokemon aktif.
-d. State mencari pokemon hanya bisa dihentikan ketika
+- State mencari pokemon hanya bisa dihentikan ketika
 pokemon sudah ditemukan atau trainer memilih untuk
 berhenti pada menu.
-e. Jika menemui pokemon maka akan masuk ke Capture
+- Jika menemui pokemon maka akan masuk ke Capture
 Mode.
-f. Untuk mempermudah boleh menambah menu go to
+- Untuk mempermudah boleh menambah menu go to
 capture mode untuk berpindah dari mode normal ke
 mode capture setelah menemukan pokemon dari
 thread Cari Pokemon.
 
 2. Pokedex
-a. Melihat list pokemon beserta Affection Point (AP) yang
+- Melihat list pokemon beserta Affection Point (AP) yang
 dimiliki.
-b. Maksimal 7 pokemon yang dimiliki.
-c. Jika menangkap lebih dari 7 maka pokemon yang baru
+- Maksimal 7 pokemon yang dimiliki.
+- Jika menangkap lebih dari 7 maka pokemon yang baru
 saja ditangkap akan langsung dilepas dan
 mendapatkan pokedollar sesuai dengan tabel dibawah.
-d. Setiap pokemon yang dimiliki, mempunyai Affection
+- Setiap pokemon yang dimiliki, mempunyai Affection
 Point (AP) dengan initial value 100 dan akan terus
 berkurang sebanyak -10 AP/10 detik dimulai dari
 waktu ditangkap (Gunakan Thread).
-e. Jika AP bernilai 0, maka pokemon tersebut memiliki
+- Jika AP bernilai 0, maka pokemon tersebut memiliki
 90% chance untuk lepas tanpa memberikan pokedollar
 ke trainer atau 10% chance untuk reset AP menjadi 50
 AP.
-f. AP tidak akan berkurang jika dalam Capture Mode.
-
-g. Di Pokedex trainer juga bisa melepas pokemon yang
+- AP tidak akan berkurang jika dalam Capture Mode.
+- Di Pokedex trainer juga bisa melepas pokemon yang
 ditangkap dan mendapat pokedollar sesuai dengan
 tabel dibawah.
-h. Bisa memberi berry ke semua pokemon yang dimiliki
+- Bisa memberi berry ke semua pokemon yang dimiliki
 untuk meningkatkan AP sebesar +10 (1 berry untuk
 semua pokemon yang ada di pokedex).
 
 3. Shop
-a. Membeli item dari soal2_pokezone.
-b. Maksimal masing-masing item yang dapat dibeli dan
+- Membeli item dari soal2_pokezone.
+- Maksimal masing-masing item yang dapat dibeli dan
 dipunya oleh trainer adalah 99.
 
 ii. Capture Mode (3 Menu)
