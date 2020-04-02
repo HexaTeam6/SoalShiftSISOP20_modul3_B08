@@ -228,7 +228,7 @@ memindahkan file sesuai ekstensinya (tidak case sensitive. JPG dan jpg adalah
 sama) ke dalam folder sesuai ekstensinya yang folder hasilnya terdapat di working
 directory ketika program kategori tersebut dijalankan.
 ● Semisal program dijalankan:
-# File kategori terletak di /home/izone/kategori
+`# File kategori terletak di /home/izone/kategori
 $ ./kategori -f path/to/file1.jpg path/to/file2.c path/to/file3.zip
 #Hasilnya adalah sebagai berikut
 /home/izone
@@ -237,7 +237,7 @@ $ ./kategori -f path/to/file1.jpg path/to/file2.c path/to/file3.zip
 |-c
 |--file2.c
 |-zip
-|--file3.zi
+|--file3.zi`
 - Pada opsi -f tersebut, user bisa menambahkan argumen file yang bisa
 dikategorikan sebanyak yang user inginkan seperti contoh di atas.
 Pada program kategori tersebut, folder jpg,c,zip tidak dibuat secara manual,
