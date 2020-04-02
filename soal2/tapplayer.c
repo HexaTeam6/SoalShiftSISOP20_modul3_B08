@@ -5,8 +5,51 @@
 #include <string.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <pthread.h>
+#include <termios.h>
 #define PORT 8080
-  
+
+pthread_t tid[2];
+
+int health = 100;
+
+void* tapdetect(void *arg) {
+    int sock = *(int *)arg;
+    int c;   
+    static struct termios oldt, newt;
+    tcgetattr( STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON);          
+    tcsetattr( STDIN_FILENO, TCSANOW, &newt);   // Merubah
+    while((c=getchar())!= 'e' || health > 0) {
+        putchar(c);
+        if(c == ' ') {
+            send(sock, "hit", 3, 0);
+            printf("hit !!\n");
+        }  
+    }             
+    tcsetattr( STDIN_FILENO, TCSANOW, &oldt);   // Mengembalikan
+}
+
+void* healthdetect(void *arg) {
+    int sock = *(int *)arg;
+    int valread;
+    char msg[1024];
+    while(1) {
+        memset(msg, 0, 1024);
+        valread = read( sock , msg, 1024);
+        if(strcmp(msg, "minus") == 0) {
+            health -= 10;
+            printf("Health %d\n", health);
+        }
+        if(health == 0)
+        {
+            send(sock , "die", strlen("die"), 0 );
+            break;
+        }   
+    }
+}
+
 int main(int argc, char const *argv[]) {
     struct sockaddr_in address;
     int sock = 0, valread;
@@ -97,30 +140,34 @@ int main(int argc, char const *argv[]) {
             printf("1. Find Match\n2. Logout\nChoices : ");
             scanf("%s", commb);
             send(sock , commb, strlen(commb), 0 );
-            int nana;
             if(strcmp(commb, "find") == 0) {
-                memset(buffer, 0, 1024);
-                valread = read(sock , buffer, 1024);
-                while(strcmp(buffer, "one") == 0) {
-                    printf("Waiting for player ...\n");
+                while(1) {
                     memset(buffer, 0, 1024);
                     valread = read(sock , buffer, 1024);
+
+                    if(strcmp(buffer, "one") == 0) {
+                        printf("Waiting for player ...\n");
+                    }
+                    if(strcmp(buffer, "two") == 0) {
+                        break;
+                    }
                     sleep(1);
                 }
-                if(strcmp(buffer, "two") == 0) {
-                    printf("Game started\n");
-                    scanf("%d", &nana);
-                }
+                printf("Game started, silahkan tap tap secepat mungkin\n");
+                
+                pthread_create(&(tid[0]), NULL, tapdetect, &sock);
+                pthread_create(&(tid[1]), NULL, healthdetect, &sock);
 
-                // memset(buffer, 0, 1024);
-                // valread = read(sock , buffer, 1024);
-                // if(strcmp(buffer, "menang") == 0) {
-                //     printf("Game berakhir kamu menang\n");
-                // }
-                // if(strcmp(buffer, "kalah") == 0) {
-                //     printf("Game berakhir kamu kalah\n");
-                // }
+                memset(buffer, 0, 1024);
+                valread = read(sock , buffer, 1024);
+                if(strcmp(buffer, "menang") == 0) {
+                    printf("Game berakhir kamu menang\n");
+                }
+                if(strcmp(buffer, "kalah") == 0) {
+                    printf("Game berakhir kamu kalah\n");
+                }
                 screen = 2;
+                int health = 100;
                 memset(buffer, 0, 1024);
             }
             if(strcmp(commb, "logout") == 0) {
