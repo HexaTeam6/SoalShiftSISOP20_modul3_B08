@@ -11,7 +11,7 @@
 pthread_t tid[100];
 int id_sock[2];
 int user = 0;
-int kalah = 0;
+int kalah;
 
 void* player(void *arg) {
     int new_socket = *(int *)arg;
@@ -91,6 +91,7 @@ void* player(void *arg) {
             printf("Kedua : %s\n", buffer);
             if(strcmp(buffer, "find") == 0) {
                 user++;
+                printf("user ada %d\n", user);
                 while(user < 2) {
                     // printf("Send one  %d\n", user);
                     send(new_socket, "one", 3, 0);
@@ -116,22 +117,38 @@ void* player(void *arg) {
                         }
                     }
                     if (strcmp(buffer, "die") == 0)
-                    {
+                    {   
                         if(new_socket == id_sock[0])
                         {
-                            send(id_sock[1], "menang", 6, 0);
-                            send(id_sock[0], "kalah", 5, 0);
+                            send(id_sock[1], "stop", 4, 0);
+                            kalah = id_sock[0];
                         }
                         if(new_socket == id_sock[1])
                         {
-                            send(id_sock[0], "menang", 6, 0);
-                            send(id_sock[1], "kalah", 5, 0);
+                            send(id_sock[0], "stop", 4, 0);
+                            kalah = id_sock[1];
                         }
                         break;
                     }
                 }
+
+                memset(buffer, 0, 1024);
+                valread = read( new_socket, buffer, 1024);
+                if(strcmp(buffer, "hasil") == 0) {
+                    if(kalah == id_sock[0])
+                    {
+                        send(id_sock[1], "menang", 6, 0);
+                        send(id_sock[0], "kalah", 5, 0);
+                    }
+                    if(kalah == id_sock[1])
+                    {
+                        send(id_sock[0], "menang", 6, 0);
+                        send(id_sock[1], "kalah", 5, 0);
+                    }
+                }
+                
                 screen = 2;
-                user--;
+                user = 0;
             }
             if(strcmp(buffer, "logout") == 0) {
                 user--;
