@@ -62,7 +62,7 @@ void* healthdetect(void *arg) {
             game = 0;
             tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
             pthread_cancel(temp);
-            pthread_exit(NULL);
+            pthread_cancel(pthread_self());
             break;
         }
     }
@@ -189,9 +189,10 @@ int main(int argc, char const *argv[]) {
                 if(strcmp(buffer, "kalah") == 0) {
                     printf("Game berakhir kamu kalah\n");
                 }
-                
+
                 screen = 2;
                 health = 100;
+                printf("screen %d health refresh %d\n", screen, health);
                 memset(buffer, 0, 1024);
             }
             if(strcmp(commb, "logout") == 0) {
