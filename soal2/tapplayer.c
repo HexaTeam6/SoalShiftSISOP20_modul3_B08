@@ -189,6 +189,7 @@ int main(int argc, char const *argv[]) {
                 if(strcmp(buffer, "kalah") == 0) {
                     printf("Game berakhir kamu kalah\n");
                 }
+                
                 screen = 2;
                 health = 100;
                 memset(buffer, 0, 1024);
