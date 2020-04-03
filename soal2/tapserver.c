@@ -34,7 +34,7 @@ void* player(void *arg) {
         if(screen == 1) {
             memset(buffer, 0, 1024);
             valread = read( new_socket, buffer, 1024);
-            printf("Pertama : %s\n", buffer);
+            // printf("Pertama : %s\n", buffer);
             if(strcmp(buffer, "register") == 0) {
                 memset(buffer, 0, 1024);
                 valread = read( new_socket, buffer, 1024);
@@ -88,10 +88,10 @@ void* player(void *arg) {
         if(screen == 2) {
             memset(buffer, 0, 1024);
             valread = read( new_socket, buffer, 1024);
-            printf("Kedua : %s\n", buffer);
+            // printf("Kedua : %s\n", buffer);
             if(strcmp(buffer, "find") == 0) {
                 user++;
-                printf("user ada %d\n", user);
+                // printf("user ada %d\n", user);
                 while(user < 2) {
                     // printf("Send one  %d\n", user);
                     send(new_socket, "one", 3, 0);
