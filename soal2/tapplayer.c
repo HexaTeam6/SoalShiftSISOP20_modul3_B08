@@ -10,25 +10,29 @@
 #define PORT 8080
 
 pthread_t tid[2];
-
+pthread_t temp;
 int health = 100;
+int game = 0;
+static struct termios oldt, newt;
 
 void* tapdetect(void *arg) {
+    temp = pthread_self();
     int sock = *(int *)arg;
     int c;   
-    static struct termios oldt, newt;
     tcgetattr( STDIN_FILENO, &oldt);
     newt = oldt;
     newt.c_lflag &= ~(ICANON);          
     tcsetattr( STDIN_FILENO, TCSANOW, &newt);   // Merubah
-    while((c=getchar())!= 'e' || health > 0) {
-        putchar(c);
+    while(game == 1) {   
+        c = getchar();
+        // putchar(c);
         if(c == ' ') {
             send(sock, "hit", 3, 0);
             printf("hit !!\n");
         }  
     }             
-    tcsetattr( STDIN_FILENO, TCSANOW, &oldt);   // Mengembalikan
+
+    return NULL;
 }
 
 void* healthdetect(void *arg) {
@@ -38,16 +42,31 @@ void* healthdetect(void *arg) {
     while(1) {
         memset(msg, 0, 1024);
         valread = read( sock , msg, 1024);
+        // printf("msg %s\n", msg);
         if(strcmp(msg, "minus") == 0) {
             health -= 10;
             printf("Health %d\n", health);
         }
         if(health == 0)
         {
+            // printf("sock %d kirim sinyal kalah\n", sock);
             send(sock , "die", strlen("die"), 0 );
+            game = 0;
+            tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+            pthread_cancel(temp);
+            pthread_cancel(pthread_self());
             break;
-        }   
+        }
+        if(strcmp(msg, "stop") == 0) {
+            // printf("masuk stop\n");
+            game = 0;
+            tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+            pthread_cancel(temp);
+            pthread_exit(NULL);
+            break;
+        }
     }
+    return NULL;
 }
 
 int main(int argc, char const *argv[]) {
@@ -154,9 +173,13 @@ int main(int argc, char const *argv[]) {
                     sleep(1);
                 }
                 printf("Game started, silahkan tap tap secepat mungkin\n");
-                
+                game = 1;
                 pthread_create(&(tid[0]), NULL, tapdetect, &sock);
                 pthread_create(&(tid[1]), NULL, healthdetect, &sock);
+                pthread_join(tid[0], NULL);
+                pthread_join(tid[1], NULL);
+
+                send(sock , "hasil", strlen("hasil"), 0 );
 
                 memset(buffer, 0, 1024);
                 valread = read(sock , buffer, 1024);
@@ -167,7 +190,7 @@ int main(int argc, char const *argv[]) {
                     printf("Game berakhir kamu kalah\n");
                 }
                 screen = 2;
-                int health = 100;
+                health = 100;
                 memset(buffer, 0, 1024);
             }
             if(strcmp(commb, "logout") == 0) {
