@@ -151,7 +151,6 @@ void* player(void *arg) {
                 user = 0;
             }
             if(strcmp(buffer, "logout") == 0) {
-                user--;
                 memset(buffer, 0, 1024);
                 screen = 1;
             }
