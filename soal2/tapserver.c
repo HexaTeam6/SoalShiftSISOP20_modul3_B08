@@ -9,7 +9,9 @@
 #define PORT 8080
 
 pthread_t tid[100];
+int id_sock[2];
 int user = 0;
+int kalah;
 
 void* player(void *arg) {
     int new_socket = *(int *)arg;
@@ -32,7 +34,7 @@ void* player(void *arg) {
         if(screen == 1) {
             memset(buffer, 0, 1024);
             valread = read( new_socket, buffer, 1024);
-            printf("Pertama : %s\n", buffer);
+            // printf("Pertama : %s\n", buffer);
             if(strcmp(buffer, "register") == 0) {
                 memset(buffer, 0, 1024);
                 valread = read( new_socket, buffer, 1024);
@@ -86,9 +88,10 @@ void* player(void *arg) {
         if(screen == 2) {
             memset(buffer, 0, 1024);
             valread = read( new_socket, buffer, 1024);
-            printf("Kedua : %s\n", buffer);
+            // printf("Kedua : %s\n", buffer);
             if(strcmp(buffer, "find") == 0) {
                 user++;
+                // printf("user ada %d\n", user);
                 while(user < 2) {
                     // printf("Send one  %d\n", user);
                     send(new_socket, "one", 3, 0);
@@ -99,17 +102,55 @@ void* player(void *arg) {
                     send(new_socket, "two", 3, 0);
                 }
 
+                while(1) {
+                    memset(buffer, 0, 1024);
+                    valread = read( new_socket, buffer, 1024);
+                    if (strcmp(buffer, "hit") == 0)
+                    {
+                        if(new_socket == id_sock[0])
+                        {
+                            send(id_sock[1], "minus", 5, 0);
+                        }
+                        if(new_socket == id_sock[1])
+                        {
+                            send(id_sock[0], "minus", 5, 0);
+                        }
+                    }
+                    if (strcmp(buffer, "die") == 0)
+                    {   
+                        if(new_socket == id_sock[0])
+                        {
+                            send(id_sock[1], "stop", 4, 0);
+                            kalah = id_sock[0];
+                        }
+                        if(new_socket == id_sock[1])
+                        {
+                            send(id_sock[0], "stop", 4, 0);
+                            kalah = id_sock[1];
+                        }
+                        break;
+                    }
+                }
 
-                // if(menang) == 0) {
-                //     send(new_socket, "menang", 6, 0);
-                // }
-                // if(kalah) == 0) {
-                //     send(new_socket, "kalah", 5, 0);
-                // }
+                memset(buffer, 0, 1024);
+                valread = read( new_socket, buffer, 1024);
+                if(strcmp(buffer, "hasil") == 0) {
+                    if(kalah == id_sock[0])
+                    {
+                        send(id_sock[1], "menang", 6, 0);
+                        send(id_sock[0], "kalah", 5, 0);
+                    }
+                    if(kalah == id_sock[1])
+                    {
+                        send(id_sock[0], "menang", 6, 0);
+                        send(id_sock[1], "kalah", 5, 0);
+                    }
+                }
+                
                 screen = 2;
+                user = 0;
             }
             if(strcmp(buffer, "logout") == 0) {
-                user--;
                 memset(buffer, 0, 1024);
                 screen = 1;
             }
@@ -154,6 +195,7 @@ int main(int argc, char const *argv[]) {
             perror("accept");
             exit(EXIT_FAILURE);
         }
+        id_sock[i] = new_socket;
         pthread_create(&(tid[i]), NULL, player, &new_socket);
         i++;
     }
