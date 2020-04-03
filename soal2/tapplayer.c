@@ -192,7 +192,7 @@ int main(int argc, char const *argv[]) {
 
                 screen = 2;
                 health = 100;
-                printf("screen %d health refresh %d\n", screen, health);
+                // printf("screen %d health refresh %d\n", screen, health);
                 memset(buffer, 0, 1024);
             }
             if(strcmp(commb, "logout") == 0) {
