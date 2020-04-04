@@ -122,9 +122,9 @@ rate mereka, baru setelah itu di random dengan peluang
 3. Setiap 1 detik thread ini akan mengkalkulasi random ulang lagi
 untuk nantinya diberikan ke soal2_traizone.
 
-No-Pokemon | Type | Encounter-Rate | Escape-Rate | Capture-Rate | Pokedollar-dari-melepas |
+| No-Pokemon | Type | Encounter-Rate | Escape-Rate | Capture-Rate | Pokedollar-dari-melepas |
 List Nama Pokemon
-(random)
+(random) |
 
 1. Normal 80% 5% setiap 20 detik 70% 80 
 ● Bulbasaur
@@ -228,17 +228,20 @@ Buatlah sebuah program dari C untuk mengkategorikan file. Program ini akan
 memindahkan file sesuai ekstensinya (tidak case sensitive. JPG dan jpg adalah
 sama) ke dalam folder sesuai ekstensinya yang folder hasilnya terdapat di working
 directory ketika program kategori tersebut dijalankan.
-● Semisal program dijalankan:
-`# File kategori terletak di /home/izone/kategori
-$ ./kategori -f path/to/file1.jpg path/to/file2.c path/to/file3.zip
-#Hasilnya adalah sebagai berikut
-/home/izone
-|-jpg
-|--file1.jpg
-|-c
-|--file2.c
-|-zip
-|--file3.zi`
+- Semisal program dijalankan:
+   ```
+          # File kategori terletak di /home/izone/kategori
+          $ ./kategori -f path/to/file1.jpg path/to/file2.c path/to/file3.zip
+          
+          #Hasilnya adalah sebagai berikut
+          /home/izone
+          |-jpg
+          |--file1.jpg
+          |-c
+          |--file2.c
+          |-zip
+          |--file3.zip
+   ```
 - Pada opsi -f tersebut, user bisa menambahkan argumen file yang bisa
 dikategorikan sebanyak yang user inginkan seperti contoh di atas.
 Pada program kategori tersebut, folder jpg,c,zip tidak dibuat secara manual,
