@@ -69,10 +69,11 @@ digunakan.
 2. Item → Menggunakan item sesuai dengan tabel item dibawah
 (hanya lullaby powder).
 3. Keluar → Keluar dari Capture Mode menuju Normal Mode.
-● Pokemon tersebut memiliki peluang untuk lari dari trainer
+- Pokemon tersebut memiliki peluang untuk lari dari trainer
 sesuai dengan persentase escape rate pada tabel dibawah
 (gunakan thread).
-e. soal2_pokezone.c mengandung fitur:
+
+- soal2_pokezone.c mengandung fitur:
 i. Shutdown game → Mematikan program soal2_pokezone dan
 soal2_traizone (Gunakan fork-exec).
 ii. Jual Item (Gunakan Thread)
@@ -88,13 +89,12 @@ ii. Jual Item (Gunakan Thread)
 - CaptureMode
 - NormalMode
 
-1 Lullaby
-Powder
-● Meningkatkan chance untuk
+1 Lullaby Powder
+- Meningkatkan chance untuk
 menangkap sebesar 20%
 (misal normal pokemon jadi
 90% capture ratenya).
-● Menurunkan escape rate jadi
+- Menurunkan escape rate jadi
 0% sehingga Pokemon tidak
 bisa lari.
 60 10 Yes No
@@ -102,9 +102,7 @@ bisa lari.
 2 Pokeball Menangkap pokemon. 
 5 - Yes No
 
-3 Berry Meningkatkan AP semua
-pokemon yang ada di pokedex
-sebesar +10.
+3 Berry Meningkatkan AP semua pokemon yang ada di pokedex sebesar +10.
 15 - No Yes
 
 5. Gunakan thread untuk implementasi lullaby powder dibuatkan
