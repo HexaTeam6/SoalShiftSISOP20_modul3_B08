@@ -259,8 +259,483 @@ secara paralel sehingga proses kategori bisa berjalan lebih cepat. Dilarang
 juga menggunakan fork-exec dan system.
 
 ### Penyelesaian
+Berikut merupakan kode program dari `kategori.c` untuk mengkategorikan file dimana program ini akan memindahkan 
+file sesuai ekstensinya (tidak case sensitive) ke dalam folder sesuai ekstensinya dan folder 
+hasilnya akan terdapat di working directory ketika program kategori tersebut dijalankan.
 
+```
+#include<stdio.h>
+#include<string.h>
+#include<ctype.h>
+#include<pthread.h>
+#include<stdlib.h>
+#include<unistd.h>
+#include<sys/stat.h>
+#include<sys/types.h>
+#include<dirent.h>
+ 
+pthread_t tid[100];
 
+char tempwd[1024];
+
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
+
+void* move(void *arg) {
+    char *path;
+    char ext[100], dirname[100], dom[100], cut[100], fn[100];
+    path = (char *) arg;
+    strcpy(dom, arg);
+    strcpy(cut, arg);
+    char *split, *arr[5], *splitn, *arrn[5];
+    int n = 0;
+    split = strtok(path, ".");
+    while(split != NULL) {
+        arr[n] = split;
+        n++;
+        split = strtok(NULL, ".");
+    }
+    if(n == 1) {
+        strcpy(ext, "Unknown");
+    }
+    else {
+        int a;
+        for(a = 0; a < strlen(arr[n-1]); a++) {
+            ext[a] = tolower(arr[n-1][a]);
+        }
+    }
+
+    n = 0;
+    splitn = strtok(cut, "/");
+    while(splitn != NULL) {
+        arrn[n] = splitn;
+        n++;
+        splitn = strtok(NULL, "/");
+    }
+    strcpy(fn, arrn[n-1]);
+
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    strcpy(dirname, cwd);
+    strcat(dirname, "/");
+    strcat(dirname, ext);
+    memset(ext, 0, 100);
+    mkdir(dirname, 0777);
+
+    FILE *pf1, *pf2;
+    pf1 = fopen(dom, "r");
+    strcat(dirname, "/");
+    strcat(dirname, fn);
+    pf2 = fopen(dirname, "w");
+    if(!pf1) {
+        printf("Unable to open source file to read\n");
+    }
+    if(!pf2) {
+        printf("Unable to open target file to write\n");
+    }
+
+    int ch;
+    while ((ch = fgetc(pf1)) != EOF) {
+        fputc(ch, pf2);
+    }
+    fclose(pf1);
+    fclose(pf2);
+    remove(dom);
+
+    return NULL;
+}
+
+void* movetemp(void *arg) {
+    char *path;
+    char ext[100], dirname[100], dom[100], cut[100], fn[100];
+    path = (char *) arg;
+    strcpy(dom, arg);
+    strcpy(cut, arg);
+    char *split, *arr[5], *splitn, *arrn[5];
+    int n = 0;
+    split = strtok(path, ".");
+    while(split != NULL) {
+        arr[n] = split;
+        n++;
+        split = strtok(NULL, ".");
+    }
+    if(n == 1) {
+        strcpy(ext, "Unknown");
+    }
+    else {
+        int a;
+        for(a = 0; a < strlen(arr[n-1]); a++) {
+            ext[a] = tolower(arr[n-1][a]);
+        }
+    }
+
+    n = 0;
+    splitn = strtok(cut, "/");
+    while(splitn != NULL) {
+        arrn[n] = splitn;
+        n++;
+        splitn = strtok(NULL, "/");
+    }
+    strcpy(fn, arrn[n-1]);
+
+    strcpy(dirname, tempwd);
+    strcat(dirname, "/");
+    strcat(dirname, ext);
+    memset(ext, 0, 100);
+    mkdir(dirname, 0777);
+
+    FILE *pf1, *pf2;
+    pf1 = fopen(dom, "r");
+    strcat(dirname, "/");
+    strcat(dirname, fn);
+    pf2 = fopen(dirname, "w");
+    if(!pf1) {
+        printf("Unable to open source file to read\n");
+    }
+    if(!pf2) {
+        printf("Unable to open target file to write\n");
+    }
+
+    int ch;
+    while ((ch = fgetc(pf1)) != EOF) {
+        fputc(ch, pf2);
+    }
+    fclose(pf1);
+    fclose(pf2);
+    remove(dom);
+
+    return NULL;
+}
+
+int main(int argc, char *argv[]) {
+
+    getcwd(tempwd, sizeof(tempwd));
+
+    int i;
+    if(strcmp(argv[1], "-f") == 0) {
+        for(i = 2; i < argc; i++) {
+            if(is_regular_file(argv[i])) {
+                pthread_create(&(tid[i-2]), NULL, move, (void *)argv[i]);
+            }
+        }
+        for(i = 0; i < argc - 2; i++) {
+            pthread_join(tid[i], NULL);
+        }
+    }
+    else if(strcmp(argv[1], "*") == 0 && argc == 2) {
+        DIR *dr;
+        struct dirent *de;
+        dr = opendir(".");
+
+        if (dr == NULL) { 
+            printf("Could not open current directory" );  
+        }
+        else {
+            i = 0;
+            char wd[1024], pathn[1024];
+            getcwd(wd, sizeof(wd));
+            while((de = readdir(dr)) != NULL){
+                if(is_regular_file(de->d_name)) {
+                    strcpy(pathn, wd);
+                    strcat(pathn, "/");
+                    strcat(pathn, de->d_name);
+                    pthread_create(&(tid[i]), NULL, move, (void *)pathn);
+                    pthread_join(tid[i], NULL);
+                    i++;
+                }
+            }
+            closedir(dr);
+        }
+    }
+    else if(strcmp(argv[1], "-d") == 0 && argc == 3) {
+        chdir(argv[2]);
+        DIR *dr;
+        struct dirent *de;
+        dr = opendir(".");
+
+        if (dr == NULL) { 
+            printf("Could not open current directory" );  
+        }
+        else {
+            i = 0;
+            char wd[1024], pathn[1024];
+            getcwd(wd, sizeof(wd));
+            while((de = readdir(dr)) != NULL){
+                if(is_regular_file(de->d_name)) {
+                    strcpy(pathn, wd);
+                    strcat(pathn, "/");
+                    strcat(pathn, de->d_name);
+                    pthread_create(&(tid[i]), NULL, movetemp, (void *)pathn);
+                    pthread_join(tid[i], NULL);
+                    i++;
+                }
+            }
+            closedir(dr);
+        }
+    }
+    else {
+        printf("Option or arguments are not valid\n");
+    }
+    
+    return 0;
+}
+```
+Penjelasan :
+```
+int is_regular_file(const char *path)
+{
+    struct stat path_stat;
+    stat(path, &path_stat);
+    return S_ISREG(path_stat.st_mode);
+}
+```
+Fungsi di atas ini merupakan fungsi untuk mengecek apakah sebuah file yang akan diakses merupakan 
+sebuah file atau sebuah direktori karena pada soal ini yag diminta adalah mengkategorikan sebuah file bukan direktori.
+```
+void* move(void *arg) {
+    char *path;
+    char ext[100], dirname[100], dom[100], cut[100], fn[100];
+    path = (char *) arg;
+    strcpy(dom, arg);
+    strcpy(cut, arg);
+    char *split, *arr[5], *splitn, *arrn[5];
+    int n = 0;
+    split = strtok(path, ".");
+    while(split != NULL) {
+        arr[n] = split;
+        n++;
+        split = strtok(NULL, ".");
+    }
+    if(n == 1) {
+        strcpy(ext, "Unknown");
+    }
+    else {
+        int a;
+        for(a = 0; a < strlen(arr[n-1]); a++) {
+            ext[a] = tolower(arr[n-1][a]);
+        }
+    }
+
+    n = 0;
+    splitn = strtok(cut, "/");
+    while(splitn != NULL) {
+        arrn[n] = splitn;
+        n++;
+        splitn = strtok(NULL, "/");
+    }
+    strcpy(fn, arrn[n-1]);
+
+    char cwd[1024];
+    getcwd(cwd, sizeof(cwd));
+    strcpy(dirname, cwd);
+    strcat(dirname, "/");
+    strcat(dirname, ext);
+    memset(ext, 0, 100);
+    mkdir(dirname, 0777);
+
+    FILE *pf1, *pf2;
+    pf1 = fopen(dom, "r");
+    strcat(dirname, "/");
+    strcat(dirname, fn);
+    pf2 = fopen(dirname, "w");
+    if(!pf1) {
+        printf("Unable to open source file to read\n");
+    }
+    if(!pf2) {
+        printf("Unable to open target file to write\n");
+    }
+
+    int ch;
+    while ((ch = fgetc(pf1)) != EOF) {
+        fputc(ch, pf2);
+    }
+    fclose(pf1);
+    fclose(pf2);
+    remove(dom);
+
+    return NULL;
+}
+```
+Fungsi  di atas merupakan fungsi yang saya gunakan dalam thread untuk mengkategorikan sebuah file.
+Fungsi ini digunakan ketika argumen opsi yang diberikan adalah `-f` atau `\*`. Fungsi ini dapat mendapatkan
+ekstensi dari sebuah file, nama file, dan memindahkan file. Fungsi memindahkan file terdapat pada bagian berikut :
+```
+FILE *pf1, *pf2;
+    pf1 = fopen(dom, "r");
+    strcat(dirname, "/");
+    strcat(dirname, fn);
+    pf2 = fopen(dirname, "w");
+    if(!pf1) {
+        printf("Unable to open source file to read\n");
+    }
+    if(!pf2) {
+        printf("Unable to open target file to write\n");
+    }
+
+    int ch;
+    while ((ch = fgetc(pf1)) != EOF) {
+        fputc(ch, pf2);
+    }
+    fclose(pf1);
+    fclose(pf2);
+    remove(dom);
+```
+Dimana bagian ini akan membuka kedua path yang sudah kita dapatkan sebelumnya dimana file lama dibuka
+dalam mode read dan file baru yang akan dibuat dalam mode write. Lalu kita akan memindahkan semua isi
+konten yang ada pada file lama dengan menggunakan `fputc( )` . Setelah memindahkan isi file lama, maka
+kita menghapus file lama dengan `remove( )`.
+```
+void* movetemp(void *arg) {
+    char *path;
+    char ext[100], dirname[100], dom[100], cut[100], fn[100];
+    path = (char *) arg;
+    strcpy(dom, arg);
+    strcpy(cut, arg);
+    char *split, *arr[5], *splitn, *arrn[5];
+    int n = 0;
+    split = strtok(path, ".");
+    while(split != NULL) {
+        arr[n] = split;
+        n++;
+        split = strtok(NULL, ".");
+    }
+    if(n == 1) {
+        strcpy(ext, "Unknown");
+    }
+    else {
+        int a;
+        for(a = 0; a < strlen(arr[n-1]); a++) {
+            ext[a] = tolower(arr[n-1][a]);
+        }
+    }
+
+    n = 0;
+    splitn = strtok(cut, "/");
+    while(splitn != NULL) {
+        arrn[n] = splitn;
+        n++;
+        splitn = strtok(NULL, "/");
+    }
+    strcpy(fn, arrn[n-1]);
+
+    strcpy(dirname, tempwd);
+    strcat(dirname, "/");
+    strcat(dirname, ext);
+    memset(ext, 0, 100);
+    mkdir(dirname, 0777);
+
+    FILE *pf1, *pf2;
+    pf1 = fopen(dom, "r");
+    strcat(dirname, "/");
+    strcat(dirname, fn);
+    pf2 = fopen(dirname, "w");
+    if(!pf1) {
+        printf("Unable to open source file to read\n");
+    }
+    if(!pf2) {
+        printf("Unable to open target file to write\n");
+    }
+
+    int ch;
+    while ((ch = fgetc(pf1)) != EOF) {
+        fputc(ch, pf2);
+    }
+    fclose(pf1);
+    fclose(pf2);
+    remove(dom);
+
+    return NULL;
+}
+```
+Fungsi di atas juga merupakan fungsi untuk memindahkan file tetapi fungsi ini akan menyimpan current working
+directory dimana kode c bekerja. Lalu kita akan memindahkan semua file yang telah dikategorikan menuju
+tempat file c bekerja.
+```
+int main(int argc, char *argv[]) {
+
+    getcwd(tempwd, sizeof(tempwd));
+
+    int i;
+    if(strcmp(argv[1], "-f") == 0) {
+        for(i = 2; i < argc; i++) {
+            if(is_regular_file(argv[i])) {
+                pthread_create(&(tid[i-2]), NULL, move, (void *)argv[i]);
+            }
+        }
+        for(i = 0; i < argc - 2; i++) {
+            pthread_join(tid[i], NULL);
+        }
+    }
+    else if(strcmp(argv[1], "*") == 0 && argc == 2) {
+        DIR *dr;
+        struct dirent *de;
+        dr = opendir(".");
+
+        if (dr == NULL) { 
+            printf("Could not open current directory" );  
+        }
+        else {
+            i = 0;
+            char wd[1024], pathn[1024];
+            getcwd(wd, sizeof(wd));
+            while((de = readdir(dr)) != NULL){
+                if(is_regular_file(de->d_name)) {
+                    strcpy(pathn, wd);
+                    strcat(pathn, "/");
+                    strcat(pathn, de->d_name);
+                    pthread_create(&(tid[i]), NULL, move, (void *)pathn);
+                    pthread_join(tid[i], NULL);
+                    i++;
+                }
+            }
+            closedir(dr);
+        }
+    }
+    else if(strcmp(argv[1], "-d") == 0 && argc == 3) {
+        chdir(argv[2]);
+        DIR *dr;
+        struct dirent *de;
+        dr = opendir(".");
+
+        if (dr == NULL) { 
+            printf("Could not open current directory" );  
+        }
+        else {
+            i = 0;
+            char wd[1024], pathn[1024];
+            getcwd(wd, sizeof(wd));
+            while((de = readdir(dr)) != NULL){
+                if(is_regular_file(de->d_name)) {
+                    strcpy(pathn, wd);
+                    strcat(pathn, "/");
+                    strcat(pathn, de->d_name);
+                    pthread_create(&(tid[i]), NULL, movetemp, (void *)pathn);
+                    pthread_join(tid[i], NULL);
+                    i++;
+                }
+            }
+            closedir(dr);
+        }
+    }
+    else {
+        printf("Option or arguments are not valid\n");
+    }
+    
+    return 0;
+}
+``` 
+Kode di atas ini merupakan fungsi main pada program c tersebut dimana setiap file yang diakses akan
+dijalankan oleh masing - masing thread. Satu file dipegang oleh satu thread.
+
+Untuk menghandle argumen yang diberikan salah dengan cara :
+`if(strcmp(argv[1], "-f") == 0) { ... }` untuk argumen dengan opsi `-f`
+`else if(strcmp(argv[1], "*") == 0 && argc == 2) { ... }` untuk argumen dengan opsi `\*`
+`else if(strcmp(argv[1], "-d") == 0 && argc == 3) { ... }` untuk argumen dengan opsi `-d`
+`else { printf("Option or arguments are not valid\n"); }` untuk argumen selain opsi yang diminta.
 
 ## SOAL 4
 
