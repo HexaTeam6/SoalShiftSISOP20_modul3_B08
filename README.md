@@ -122,7 +122,7 @@ rate mereka, baru setelah itu di random dengan peluang
 3. Setiap 1 detik thread ini akan mengkalkulasi random ulang lagi
 untuk nantinya diberikan ke soal2_traizone.
 
-No-Pokemon Type Encounter-Rate Escape-Rate Capture-Rate Pokedollar-dari-melepas
+No-Pokemon|Type|Encounter-Rate|Escape-Rate|Capture-Rate|Pokedollar-dari-melepas|
 List Nama Pokemon
 (random)
 
