@@ -74,9 +74,9 @@ sesuai dengan persentase escape rate pada tabel dibawah
 (gunakan thread).
 
 - soal2_pokezone.c mengandung fitur:
-   i. Shutdown game → Mematikan program soal2_pokezone dan
-      soal2_traizone (Gunakan fork-exec).
-  ii. Jual Item (Gunakan Thread)
+     - Shutdown game → Mematikan program soal2_pokezone dan
+       soal2_traizone (Gunakan fork-exec).
+     - Jual Item (Gunakan Thread).
 
 1. Stock awal semua item adalah 100.
 2. Masing-masing item akan bertambah +10 item/10 detik.
@@ -94,15 +94,18 @@ sesuai dengan persentase escape rate pada tabel dibawah
       - Meningkatkan chance untuk
         menangkap sebesar 20%
         (misal normal pokemon jadi
-        90% capture ratenya).
+        90% capture ratenya)
       - Menurunkan escape rate jadi
         0% sehingga Pokemon tidak
-        bisa lari.
-        60 10 Yes No
-   2. Pokeball Menangkap pokemon. 
-        5 - Yes No
-   3. Berry Meningkatkan AP semua pokemon yang ada di pokedex sebesar +10.
-        15 - No Yes
+        bisa lari
+      - 60 10 Yes No
+        
+   2. Pokeball 
+       - Menangkap pokemon 
+       - 5 - Yes No
+   3. Berry 
+       - Meningkatkan AP semua pokemon yang ada di pokedex sebesar +10
+       - 15 - No Yes
 
 5. Gunakan thread untuk implementasi lullaby powder dibuatkan
 masing-masing 1 thread.
@@ -123,21 +126,21 @@ No-Pokemon Type Encounter-Rate Escape-Rate Capture-Rate Pokedollar-dari-melepas
 List Nama Pokemon
 (random)
 
-1 Normal 80% 5% setiap 20 detik 70% 80 
+1. Normal 80% 5% setiap 20 detik 70% 80 
 ● Bulbasaur
 ● Charmander
 ● Squirtle
 ● Rattata
 ● Caterpie
 
-2 Rare 15% 10% setiap 20 detik 50% 100 
+2. Rare 15% 10% setiap 20 detik 50% 100 
 ● Pikachu
 ● Eevee
 ● Jigglypuff
 ● Snorlax
 ● Dragonite
 
-3 Legendary 5% 20% setiap 20 detik 30% 200 
+3. Legendary 5% 20% setiap 20 detik 30% 200 
 ● Mew
 ● Mewtwo
 ● Moltres
