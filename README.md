@@ -74,36 +74,35 @@ sesuai dengan persentase escape rate pada tabel dibawah
 (gunakan thread).
 
 - soal2_pokezone.c mengandung fitur:
-i. Shutdown game → Mematikan program soal2_pokezone dan
-soal2_traizone (Gunakan fork-exec).
-ii. Jual Item (Gunakan Thread)
+   i. Shutdown game → Mematikan program soal2_pokezone dan
+      soal2_traizone (Gunakan fork-exec).
+  ii. Jual Item (Gunakan Thread)
+
 1. Stock awal semua item adalah 100.
 2. Masing-masing item akan bertambah +10 item/10 detik.
 3. Maximum item yang dalam shop adalah 200.
 4. List item ada pada tabel dibawah.
-- No 
-- Nama Item 
-- Effect 
-- Harga(Pokedollar)
-- Durasi(Detik)
-- CaptureMode
-- NormalMode
+   - No 
+   - Nama Item 
+   - Effect 
+   - Harga(Pokedollar)
+   - Durasi(Detik)
+   - CaptureMode
+   - NormalMode
 
-1 Lullaby Powder
-- Meningkatkan chance untuk
-menangkap sebesar 20%
-(misal normal pokemon jadi
-90% capture ratenya).
-- Menurunkan escape rate jadi
-0% sehingga Pokemon tidak
-bisa lari.
-60 10 Yes No
-
-2 Pokeball Menangkap pokemon. 
-5 - Yes No
-
-3 Berry Meningkatkan AP semua pokemon yang ada di pokedex sebesar +10.
-15 - No Yes
+   1. Lullaby Powder
+      - Meningkatkan chance untuk
+        menangkap sebesar 20%
+        (misal normal pokemon jadi
+        90% capture ratenya).
+      - Menurunkan escape rate jadi
+        0% sehingga Pokemon tidak
+        bisa lari.
+        60 10 Yes No
+   2. Pokeball Menangkap pokemon. 
+        5 - Yes No
+   3. Berry Meningkatkan AP semua pokemon yang ada di pokedex sebesar +10.
+        15 - No Yes
 
 5. Gunakan thread untuk implementasi lullaby powder dibuatkan
 masing-masing 1 thread.
