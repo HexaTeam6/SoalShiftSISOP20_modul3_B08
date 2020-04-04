@@ -653,7 +653,7 @@ void* movetemp(void *arg) {
 ```
 Fungsi di atas juga merupakan fungsi untuk memindahkan file tetapi fungsi ini akan menyimpan current working
 directory dimana kode c bekerja. Lalu kita akan memindahkan semua file yang telah dikategorikan menuju
-tempat file c bekerja.
+tempat file c bekerja. Fungsi ini digunakan pada argumen opsi `-d` .
 ```
 int main(int argc, char *argv[]) {
 
@@ -732,10 +732,10 @@ Kode di atas ini merupakan fungsi main pada program c tersebut dimana setiap fil
 dijalankan oleh masing - masing thread. Satu file dipegang oleh satu thread.
 
 Untuk menghandle argumen yang diberikan salah dengan cara :
-`if(strcmp(argv[1], "-f") == 0) { ... }` untuk argumen dengan opsi `-f`
-`else if(strcmp(argv[1], "*") == 0 && argc == 2) { ... }` untuk argumen dengan opsi `\*`
-`else if(strcmp(argv[1], "-d") == 0 && argc == 3) { ... }` untuk argumen dengan opsi `-d`
-`else { printf("Option or arguments are not valid\n"); }` untuk argumen selain opsi yang diminta.
+- `if(strcmp(argv[1], "-f") == 0) { ... }` untuk argumen dengan opsi `-f`
+- `else if(strcmp(argv[1], "*") == 0 && argc == 2) { ... }` untuk argumen dengan opsi `\*`
+- `else if(strcmp(argv[1], "-d") == 0 && argc == 3) { ... }` untuk argumen dengan opsi `-d`
+- `else { printf("Option or arguments are not valid\n"); }` untuk argumen selain opsi yang diminta.
 
 ## SOAL 4
 
