@@ -171,9 +171,17 @@ anda diminta untuk menginputkan username dan password seperti berikut
 Screen 1 :
 1. Login
 2. Register
+
+
 Choices : login
+
+
 Username : { ex : qiqi }
+
+
 Password : { ex : aku nggak marah!! }
+
+
 - Jika login berhasil maka akan menampilkan pesan “login success”, jika gagal
 akan menampilkan pesan “login failed” (pengecekan login hanya mengecek
 username dan password, maka dapat multi autentikasi dengan username dan
@@ -221,6 +229,8 @@ terdaftar (username dan password harus terlihat)
 
 ### Penyelesaian
 --- CLIENT SIDE ---
+
+
 Berikut ini merupakan kode dari `tapplayer.c` untuk menjalankan client side.
 ```
 #include <stdio.h>
@@ -551,6 +561,8 @@ health pemain. Setelah game berakhir, maka akan ditampilkan hasil dari game ters
 
 
 --- SERVER SIDE ---
+
+
 Berikut ini merupakan kode dari `tapserver.c` untuk menjalankan server side.
 ```
 #include <stdio.h>
