@@ -206,7 +206,7 @@ menampilkan pesan “Waiting for player ...” print terus sampai menemukan
 lawan
 - Jika menemukan lawan maka akan menampilkan pesan “Game dimulai
 silahkan tap tap secepat mungkin !!”
-- Pada saat game dimulai diberikan variable health = 100,dan anda dapat
+- Pada saat game dimulai diberikan variable health = 100, dan anda dapat
 men-tap (menekan space pada keyboard tanpa harus menekan enter)
 - Pada saat anda men-tap maka akan menampilkan pesan “hit !!”, dan pada
 lawan healthnya akan berkurang sebanyak 10 kemudian pada lawan
