@@ -220,7 +220,694 @@ gagal “Auth Failed”
 terdaftar (username dan password harus terlihat)
 
 ### Penyelesaian
+--- CLIENT SIDE ---
+Berikut ini merupakan kode dari `tapplayer.c` untuk menjalankan client side.
+```
+#include <stdio.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <unistd.h>
+#include <arpa/inet.h>
+#include <pthread.h>
+#include <termios.h>
+#define PORT 8080
 
+pthread_t tid[2];
+pthread_t temp;
+int health = 100;
+int game = 0;
+static struct termios oldt, newt;
+
+void* tapdetect(void *arg) {
+    temp = pthread_self();
+    int sock = *(int *)arg;
+    int c;   
+    tcgetattr( STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON);          
+    tcsetattr( STDIN_FILENO, TCSANOW, &newt);   // Merubah
+    while(game == 1) {   
+        c = getchar();
+        // putchar(c);
+        if(c == ' ') {
+            send(sock, "hit", 3, 0);
+            printf("hit !!\n");
+        }  
+    }             
+
+    return NULL;
+}
+
+void* healthdetect(void *arg) {
+    int sock = *(int *)arg;
+    int valread;
+    char msg[1024];
+    while(1) {
+        memset(msg, 0, 1024);
+        valread = read( sock , msg, 1024);
+        // printf("msg %s\n", msg);
+        if(strcmp(msg, "minus") == 0) {
+            health -= 10;
+            printf("Health %d\n", health);
+        }
+        if(health == 0)
+        {
+            // printf("sock %d kirim sinyal kalah\n", sock);
+            send(sock , "die", strlen("die"), 0 );
+            game = 0;
+            tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+            pthread_cancel(temp);
+            pthread_cancel(pthread_self());
+            break;
+        }
+        if(strcmp(msg, "stop") == 0) {
+            // printf("masuk stop\n");
+            game = 0;
+            tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+            pthread_cancel(temp);
+            pthread_cancel(pthread_self());
+            break;
+        }
+    }
+    return NULL;
+}
+
+int main(int argc, char const *argv[]) {
+    struct sockaddr_in address;
+    int sock = 0, valread;
+    struct sockaddr_in serv_addr;
+    char buffer[1024] = {0};
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+        printf("\n Socket creation error \n");
+        return -1;
+    }
+  
+    memset(&serv_addr, '0', sizeof(serv_addr));
+  
+    serv_addr.sin_family = AF_INET;
+    serv_addr.sin_port = htons(PORT);
+      
+    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) {
+        printf("\nInvalid address/ Address not supported \n");
+        return -1;
+    }
+  
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+        printf("\nConnection Failed \n");
+        return -1;
+    }
+
+    int screen = 1; // Buat screen
+    char comma[10], commb[10], nama[100], pass[100], data[100], spc;
+
+    while(1) {
+        if(screen == 1) {
+            printf("1. Login\n2. Register\nChoices : ");
+            scanf("%s", comma);
+            scanf("%c", &spc);
+            send(sock , comma, strlen(comma), 0 );
+            if(strcmp(comma, "register") == 0) {
+                printf("Username : ");
+                scanf("%[^\n]s", nama);
+                scanf("%c", &spc);
+                printf("Password : ");
+                scanf("%[^\n]s", pass);
+                scanf("%c", &spc);
+                strcpy(data, nama);
+                strcat(data, "||");
+                strcat(data, pass);
+                // printf("data register %s\n", data);
+                send(sock , data, strlen(data), 0 );
+                printf("Register success\n");
+
+                memset(data, 0, 100);
+                memset(nama, 0, 100);
+                memset(pass, 0, 100);
+                memset(buffer, 0, 1024);
+                screen = 2;
+            }
+            if(strcmp(comma, "login") == 0) {
+                printf("Username : ");
+                scanf("%[^\n]s", nama);
+                scanf("%c", &spc);
+                printf("Password : ");
+                scanf("%[^\n]s", pass);
+                scanf("%c", &spc);
+                strcpy(data, nama);
+                strcat(data, "||");
+                strcat(data, pass);
+                strcat(data, "\n");
+                // printf("data login %s\n", data);
+                send(sock , data, strlen(data), 0 );
+
+                memset(buffer, 0, 1024);
+                valread = read( sock , buffer, 1024);
+                if(strcmp(buffer, "login_berhasil") == 0) {
+                    printf("Login success\n");
+                    screen = 2;
+                }
+                if(strcmp(buffer, "login_gagal") == 0) {
+                    printf("Login failed\n");
+                    screen = 1;
+                }
+
+                memset(data, 0, 100);
+                memset(nama, 0, 100);
+                memset(pass, 0, 100);
+                memset(buffer, 0, 1024);
+            }
+        }
+
+        if(screen == 2) {
+            printf("1. Find Match\n2. Logout\nChoices : ");
+            scanf("%s", commb);
+            send(sock , commb, strlen(commb), 0 );
+            if(strcmp(commb, "find") == 0) {
+                while(1) {
+                    memset(buffer, 0, 1024);
+                    valread = read(sock , buffer, 1024);
+
+                    if(strcmp(buffer, "one") == 0) {
+                        printf("Waiting for player ...\n");
+                    }
+                    if(strcmp(buffer, "two") == 0) {
+                        break;
+                    }
+                    sleep(1);
+                }
+                printf("Game started, silahkan tap tap secepat mungkin\n");
+                game = 1;
+                pthread_create(&(tid[0]), NULL, tapdetect, &sock);
+                pthread_create(&(tid[1]), NULL, healthdetect, &sock);
+                pthread_join(tid[0], NULL);
+                pthread_join(tid[1], NULL);
+
+                send(sock , "hasil", strlen("hasil"), 0 );
+
+                memset(buffer, 0, 1024);
+                valread = read(sock , buffer, 1024);
+                if(strcmp(buffer, "menang") == 0) {
+                    printf("Game berakhir kamu menang\n");
+                }
+                if(strcmp(buffer, "kalah") == 0) {
+                    printf("Game berakhir kamu kalah\n");
+                }
+
+                screen = 2;
+                health = 100;
+                // printf("screen %d health refresh %d\n", screen, health);
+                memset(buffer, 0, 1024);
+            }
+            if(strcmp(commb, "logout") == 0) {
+                memset(commb, 0, 10);
+                screen = 1;
+            }
+        }
+
+    }
+
+    return 0;
+}
+```
+Berikut ini merupakan bagian kode untuk menjalan screen 1 pada client side dimana
+client akan dimintai inputan untuk login atau register. Setiap login atau register
+akan dimintai username dan password.
+```
+if(screen == 1) {
+  printf("1. Login\n2. Register\nChoices : ");
+  scanf("%s", comma);
+  scanf("%c", &spc);
+  send(sock , comma, strlen(comma), 0 );
+  if(strcmp(comma, "register") == 0) {
+      printf("Username : ");
+      scanf("%[^\n]s", nama);
+      scanf("%c", &spc);
+      printf("Password : ");
+      scanf("%[^\n]s", pass);
+      scanf("%c", &spc);
+      strcpy(data, nama);
+      strcat(data, "||");
+      strcat(data, pass);
+      // printf("data register %s\n", data);
+      send(sock , data, strlen(data), 0 );
+      printf("Register success\n");
+
+      memset(data, 0, 100);
+      memset(nama, 0, 100);
+      memset(pass, 0, 100);
+      memset(buffer, 0, 1024);
+      screen = 2;
+  }
+  if(strcmp(comma, "login") == 0) {
+      printf("Username : ");
+      scanf("%[^\n]s", nama);
+      scanf("%c", &spc);
+      printf("Password : ");
+      scanf("%[^\n]s", pass);
+      scanf("%c", &spc);
+      strcpy(data, nama);
+      strcat(data, "||");
+      strcat(data, pass);
+      strcat(data, "\n");
+      // printf("data login %s\n", data);
+      send(sock , data, strlen(data), 0 );
+
+      memset(buffer, 0, 1024);
+      valread = read( sock , buffer, 1024);
+      if(strcmp(buffer, "login_berhasil") == 0) {
+          printf("Login success\n");
+          screen = 2;
+      }
+      if(strcmp(buffer, "login_gagal") == 0) {
+          printf("Login failed\n");
+          screen = 1;
+      }
+
+      memset(data, 0, 100);
+      memset(nama, 0, 100);
+      memset(pass, 0, 100);
+      memset(buffer, 0, 1024);
+  }
+}
+```
+Sedangkan untuk screen 2, berikut merupakan bagian kode yang menampilkan
+menu pilihan untuk find match atau logout. Jika client memilih find match maka
+akan menunggu hingga mendapatkan pasangan match dan game akan dimulai jika sudah 
+mendapatkan pasangan. Jika client memilih untuk logout, maka client akan diarahkan
+kembali menuju screen 1.
+```
+if(screen == 2) {
+  printf("1. Find Match\n2. Logout\nChoices : ");
+  scanf("%s", commb);
+  send(sock , commb, strlen(commb), 0 );
+  if(strcmp(commb, "find") == 0) {
+      while(1) {
+          memset(buffer, 0, 1024);
+          valread = read(sock , buffer, 1024);
+
+          if(strcmp(buffer, "one") == 0) {
+              printf("Waiting for player ...\n");
+          }
+          if(strcmp(buffer, "two") == 0) {
+              break;
+          }
+          sleep(1);
+      }
+      printf("Game started, silahkan tap tap secepat mungkin\n");
+      game = 1;
+      pthread_create(&(tid[0]), NULL, tapdetect, &sock);
+      pthread_create(&(tid[1]), NULL, healthdetect, &sock);
+      pthread_join(tid[0], NULL);
+      pthread_join(tid[1], NULL);
+
+      send(sock , "hasil", strlen("hasil"), 0 );
+
+      memset(buffer, 0, 1024);
+      valread = read(sock , buffer, 1024);
+      if(strcmp(buffer, "menang") == 0) {
+          printf("Game berakhir kamu menang\n");
+      }
+      if(strcmp(buffer, "kalah") == 0) {
+          printf("Game berakhir kamu kalah\n");
+      }
+
+      screen = 2;
+      health = 100;
+      // printf("screen %d health refresh %d\n", screen, health);
+      memset(buffer, 0, 1024);
+  }
+  if(strcmp(commb, "logout") == 0) {
+      memset(commb, 0, 10);
+      screen = 1;
+  }
+}
+```
+Ketika game dimulai, pada client ini akan membuat 2 thread dimana thread pertama
+akan menghandle inputan client yaitu spacebar, sedangkan thread kedua akan
+menghandle penerimaan buffer dari server apabila lawan main menyerang dan akan mengurangi
+health pemain. Setelah game berakhir, maka akan ditampilkan hasil dari game tersebut.
+
+
+--- SERVER SIDE ---
+Berikut ini merupakan kode dari `tapserver.c` untuk menjalankan server side.
+```
+#include <stdio.h>
+#include <sys/socket.h>
+#include <stdlib.h>
+#include <netinet/in.h>
+#include <string.h>
+#include <unistd.h>
+#include <pthread.h>
+#include <arpa/inet.h>
+#define PORT 8080
+
+pthread_t tid[100];
+int id_sock[2];
+int user = 0;
+int kalah;
+
+void* player(void *arg) {
+    int new_socket = *(int *)arg;
+    int valread;
+    char buffer[1024] = {0};
+    int screen = 1;
+    char nama[100], pass[100];
+    // printf("new_socket %d\n", new_socket);
+
+    FILE *pf;
+    pf = fopen("akun.txt", "a");
+    if(pf == NULL)
+    {
+        printf("Create file failed\n");
+        exit(EXIT_FAILURE);
+    }
+    fclose(pf);
+
+    while(1) {
+        if(screen == 1) {
+            memset(buffer, 0, 1024);
+            valread = read( new_socket, buffer, 1024);
+            // printf("Pertama : %s\n", buffer);
+            if(strcmp(buffer, "register") == 0) {
+                memset(buffer, 0, 1024);
+                valread = read( new_socket, buffer, 1024);
+                // printf("regis %s\n", buffer);
+                pf = fopen("akun.txt", "a");
+                fprintf(pf, "%s\n", buffer);
+                memset(buffer, 0, 1024);
+                fclose(pf);
+
+                char line[100]={0};
+                pf = fopen("akun.txt", "r");
+                printf("--- List Account Terdaftar ---\n");
+                while(fgets(line, sizeof(line), pf) != NULL){
+                    sscanf(line, "%[^|]||%[^\n]s", nama, pass);
+                    printf("Username : %s\n Password : %s\n", nama, pass);
+                    memset(nama, 0, 100);
+                    memset(pass, 0, 100);
+                }
+                fclose(pf);
+                screen = 2;
+            }
+            if(strcmp(buffer, "login") == 0) {
+                memset(buffer, 0, 1024);
+                valread = read( new_socket, buffer, 1024);
+                // printf("login %s\n", buffer);
+
+                int catch = 0;
+                char line[100]={0};
+                pf = fopen("akun.txt", "r");
+                while(fgets(line, sizeof(line), pf) != NULL){
+                    if(strcmp(line, buffer) == 0) {
+                        // printf("catch\n");
+                        catch = 1;
+                    }
+                }
+                fclose(pf);
+                if(catch == 1) {
+                    send(new_socket , "login_berhasil", 14 , 0 );
+                    printf("Auth success\n");
+                    screen = 2;
+                }
+                else {
+                    send(new_socket , "login_gagal", 11 , 0 );
+                    printf("Auth failed\n");
+                    screen = 1;
+                }
+                memset(buffer, 0, 1024);
+            }
+        }
+
+        if(screen == 2) {
+            memset(buffer, 0, 1024);
+            valread = read( new_socket, buffer, 1024);
+            // printf("Kedua : %s\n", buffer);
+            if(strcmp(buffer, "find") == 0) {
+                user++;
+                // printf("user ada %d\n", user);
+                while(user < 2) {
+                    // printf("Send one  %d\n", user);
+                    send(new_socket, "one", 3, 0);
+                    sleep(1);
+                }
+                if(user >= 2) {
+                    // printf("Send two %d\n", user);
+                    send(new_socket, "two", 3, 0);
+                }
+
+                while(1) {
+                    memset(buffer, 0, 1024);
+                    valread = read( new_socket, buffer, 1024);
+                    if (strcmp(buffer, "hit") == 0)
+                    {
+                        if(new_socket == id_sock[0])
+                        {
+                            send(id_sock[1], "minus", 5, 0);
+                        }
+                        if(new_socket == id_sock[1])
+                        {
+                            send(id_sock[0], "minus", 5, 0);
+                        }
+                    }
+                    if (strcmp(buffer, "die") == 0)
+                    {   
+                        if(new_socket == id_sock[0])
+                        {
+                            send(id_sock[1], "stop", 4, 0);
+                            kalah = id_sock[0];
+                        }
+                        if(new_socket == id_sock[1])
+                        {
+                            send(id_sock[0], "stop", 4, 0);
+                            kalah = id_sock[1];
+                        }
+                        break;
+                    }
+                }
+
+                memset(buffer, 0, 1024);
+                valread = read( new_socket, buffer, 1024);
+                if(strcmp(buffer, "hasil") == 0) {
+                    if(kalah == id_sock[0])
+                    {
+                        send(id_sock[1], "menang", 6, 0);
+                        send(id_sock[0], "kalah", 5, 0);
+                    }
+                    if(kalah == id_sock[1])
+                    {
+                        send(id_sock[0], "menang", 6, 0);
+                        send(id_sock[1], "kalah", 5, 0);
+                    }
+                }
+                
+                screen = 2;
+                user = 0;
+            }
+            if(strcmp(buffer, "logout") == 0) {
+                memset(buffer, 0, 1024);
+                screen = 1;
+            }
+        }
+    }
+}
+
+int main(int argc, char const *argv[]) {
+
+    int server_fd, new_socket, valread;
+    struct sockaddr_in address;
+    int opt = 1;
+    int addrlen = sizeof(address);
+
+    if ((server_fd = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+        perror("socket failed");
+        exit(EXIT_FAILURE);
+    }
+      
+    if (setsockopt(server_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &opt, sizeof(opt))) {
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
+
+    address.sin_family = AF_INET;
+    address.sin_addr.s_addr = INADDR_ANY;
+    address.sin_port = htons( PORT );
+      
+    if (bind(server_fd, (struct sockaddr *)&address, sizeof(address))<0) {
+        perror("bind failed");
+        exit(EXIT_FAILURE);
+    }
+
+    if (listen(server_fd, 3) < 0) {
+        perror("listen");
+        exit(EXIT_FAILURE);
+    }
+
+    int i = 0;
+    while(1) {
+        if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
+            perror("accept");
+            exit(EXIT_FAILURE);
+        }
+        id_sock[i] = new_socket;
+        pthread_create(&(tid[i]), NULL, player, &new_socket);
+        i++;
+    }
+
+    return 0;
+}
+```
+Setiap client yang connect akan dijalankan oleh satu thread sendiri agar bisa multiclient.
+Fungsi tersebut diatur oleh bagian kode berikut. Socket dari masing - masing client akan
+dipassing ke fungsi yang dijalankan masing - masing thread.
+```
+int i = 0;
+while(1) {
+   if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
+       perror("accept");
+       exit(EXIT_FAILURE);
+   }
+   id_sock[i] = new_socket;
+   pthread_create(&(tid[i]), NULL, player, &new_socket);
+   i++;
+}
+```
+Berikut merupakan bagian kode yang akan menghandle apabila login success dan register success.
+Pada server side akan menampilkan " Auth success" apabila login dari client success. Apabila
+login gagal maka server akan menampilkan "Auth failed". Untuk register, maka server akan membuka
+file penampung nama dan username yang sudah didaftarkan dan akan ditampilkan melalui server side.
+```
+if(screen == 1) {
+  memset(buffer, 0, 1024);
+  valread = read( new_socket, buffer, 1024);
+  // printf("Pertama : %s\n", buffer);
+  if(strcmp(buffer, "register") == 0) {
+      memset(buffer, 0, 1024);
+      valread = read( new_socket, buffer, 1024);
+      // printf("regis %s\n", buffer);
+      pf = fopen("akun.txt", "a");
+      fprintf(pf, "%s\n", buffer);
+      memset(buffer, 0, 1024);
+      fclose(pf);
+
+      char line[100]={0};
+      pf = fopen("akun.txt", "r");
+      printf("--- List Account Terdaftar ---\n");
+      while(fgets(line, sizeof(line), pf) != NULL){
+          sscanf(line, "%[^|]||%[^\n]s", nama, pass);
+          printf("Username : %s\n Password : %s\n", nama, pass);
+          memset(nama, 0, 100);
+          memset(pass, 0, 100);
+      }
+      fclose(pf);
+      screen = 2;
+  }
+  if(strcmp(buffer, "login") == 0) {
+      memset(buffer, 0, 1024);
+      valread = read( new_socket, buffer, 1024);
+      // printf("login %s\n", buffer);
+
+      int catch = 0;
+      char line[100]={0};
+      pf = fopen("akun.txt", "r");
+      while(fgets(line, sizeof(line), pf) != NULL){
+          if(strcmp(line, buffer) == 0) {
+              // printf("catch\n");
+              catch = 1;
+          }
+      }
+      fclose(pf);
+      if(catch == 1) {
+          send(new_socket , "login_berhasil", 14 , 0 );
+          printf("Auth success\n");
+          screen = 2;
+      }
+      else {
+          send(new_socket , "login_gagal", 11 , 0 );
+          printf("Auth failed\n");
+          screen = 1;
+      }
+      memset(buffer, 0, 1024);
+  }
+}
+```
+Pada bagian kode berikut, server akan mengatur permainan dari kedua client yang melakukan find match.
+Ketika game dimulai, apabila client 1 menyerang maka buffer yang dikirim dari client 1 akan dikirim 
+ke client 2 dan sebaliknya. Server akan menunggu buffer dari salah satu client yang kalah dan akan mengirim
+buffer yang berisi hasil pemenang dari game.
+```
+if(screen == 2) {
+  memset(buffer, 0, 1024);
+  valread = read( new_socket, buffer, 1024);
+  // printf("Kedua : %s\n", buffer);
+  if(strcmp(buffer, "find") == 0) {
+      user++;
+      // printf("user ada %d\n", user);
+      while(user < 2) {
+          // printf("Send one  %d\n", user);
+          send(new_socket, "one", 3, 0);
+          sleep(1);
+      }
+      if(user >= 2) {
+          // printf("Send two %d\n", user);
+          send(new_socket, "two", 3, 0);
+      }
+
+      while(1) {
+          memset(buffer, 0, 1024);
+          valread = read( new_socket, buffer, 1024);
+          if (strcmp(buffer, "hit") == 0)
+          {
+              if(new_socket == id_sock[0])
+              {
+                  send(id_sock[1], "minus", 5, 0);
+              }
+              if(new_socket == id_sock[1])
+              {
+                  send(id_sock[0], "minus", 5, 0);
+              }
+          }
+          if (strcmp(buffer, "die") == 0)
+          {   
+              if(new_socket == id_sock[0])
+              {
+                  send(id_sock[1], "stop", 4, 0);
+                  kalah = id_sock[0];
+              }
+              if(new_socket == id_sock[1])
+              {
+                  send(id_sock[0], "stop", 4, 0);
+                  kalah = id_sock[1];
+              }
+              break;
+          }
+      }
+
+      memset(buffer, 0, 1024);
+      valread = read( new_socket, buffer, 1024);
+      if(strcmp(buffer, "hasil") == 0) {
+          if(kalah == id_sock[0])
+          {
+              send(id_sock[1], "menang", 6, 0);
+              send(id_sock[0], "kalah", 5, 0);
+          }
+          if(kalah == id_sock[1])
+          {
+              send(id_sock[0], "menang", 6, 0);
+              send(id_sock[1], "kalah", 5, 0);
+          }
+      }
+
+      screen = 2;
+      user = 0;
+  }
+  if(strcmp(buffer, "logout") == 0) {
+      memset(buffer, 0, 1024);
+      screen = 1;
+  }
+}
+```
 
 ## SOAL 3
 
