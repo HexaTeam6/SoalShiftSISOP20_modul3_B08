@@ -642,9 +642,6 @@ void *fpokerandomthread(){
         sleep(1);
     }
 }
-=======
----
->>>>>>> a007138be5831f2c8a1e8f99b9ebd611055a7f02
 
 int main(){
     srand(time(NULL));
@@ -713,7 +710,7 @@ int main(){
     }
 }
 ````
-####Penjelasan soal1_traizone.c
+#### Penjelasan soal1_traizone.c
 ````
 while (1) {
         printf("\n");
@@ -1092,7 +1089,7 @@ void cleanup(){
 merupakan fungsi untuk menghapus semua variable yang alokasikan di shared memori, serta beberapa variable thread. 
 Yang nantinya akan ditrigger oleh program _soal1_pokezone.c_ melalui `signal(SIGINT, cleanup);`.
 
-####Penjelasan soal1_pokezone.c
+#### Penjelasan soal1_pokezone.c
 ````
 void *frestockhread(){
     while (1){
