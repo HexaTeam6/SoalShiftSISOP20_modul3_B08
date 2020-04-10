@@ -148,7 +148,7 @@ List Nama Pokemon
 ● Articuno
 
 ### Penyelesaian
-berikut source code penyelesaiannya,
+Berikut source code penyelesaiannya,
 
 _soal1_traizone.c_
 ````
@@ -1159,6 +1159,8 @@ selanjutnya bagian,
 ````
 merupakan bagian  menu Quit yang berfungsi untuk menghentikan program _soal1_traizone.c_dengan mengirimkan 
 kill signal ke program tersebut.
+
+---
 
 ## SOAL 2
 
@@ -2582,7 +2584,7 @@ melalui tulisan dalam buku catatannya yang tersebar di penjuru dunia. "One Piece
 does exist".
 
 ### Penyelesaian
-##### 4a
+##### Penyelesaian 4a
 ````
 #include <stdio.h>
 #include <sys/ipc.h>
@@ -2764,7 +2766,7 @@ void* playandcount(void *arg){
 fungsi diatas merupakan fungsi _thread_ untuk menghitung perkalian matrix yang telah ditentukan
 dengan membaginya untuk tiap kolom dan kemudian terakhir ditampilkan.
 
-#####4b
+##### Penyelesaian 4b
 ````
 #include <stdio.h>
 #include <sys/ipc.h>
@@ -2992,7 +2994,7 @@ ULL factorialPlus(int n){
 ````
 merupakan fungsi untuk menghitung faktorial(penjumlahan).
 
-#####4c
+##### Penyelesaian 4c
 ````
 #include <stdlib.h>
 #include <unistd.h>
