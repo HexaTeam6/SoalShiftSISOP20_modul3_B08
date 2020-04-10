@@ -57,6 +57,7 @@ int menu=-1; //pilih menu
 int m_powder=0; //menggunakan powder
 
 pthread_t threadcari; //thread mencari pokemon
+pthread_t inputthread;
 pthread_t threadcapture; //thread mencari pokemon
 pthread_t powderthread; //thread menggunakan powder
 pthread_t pokemonthread[7]; //set pokemon when AP is low
@@ -113,7 +114,7 @@ void *fthreadcari(){
             mencari = 0;
             mode = 1;
             menu = -1;
-            // pthread_cancel(inputthread);
+            pthread_cancel(inputthread);
             pthread_exit(0);
         }
     }
@@ -145,6 +146,10 @@ void *fpowderthread(){
     m_powder = 0;
     printf("Efek lullaby powder habis.\n");
     pthread_exit(0);
+}
+
+void *finputthread(){
+    scanf("%d", &menu);
 }
 
 int main() { 
@@ -189,7 +194,8 @@ int main() {
             else
                 printf("----Capture Mode----\nMenemukan pokemon: %s\n1. Tangkap\n2. Item\n3. Keluar\nInput: ", pokemonList[id_pokemon]);
         }
-        scanf("%d", &menu);
+        pthread_create(&inputthread, NULL, finputthread, NULL);
+        pthread_join(inputthread, NULL);
         if (menu == -1) {
             printf("\n");
             continue;
