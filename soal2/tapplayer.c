@@ -139,6 +139,7 @@ int main(int argc, char const *argv[]) {
 
                 memset(buffer, 0, 1024);
                 valread = read( sock , buffer, 1024);
+                printf("142 %s\n", buffer);
                 if(strcmp(buffer, "login_berhasil") == 0) {
                     printf("Login success\n");
                     screen = 2;
@@ -158,6 +159,7 @@ int main(int argc, char const *argv[]) {
         if(screen == 2) {
             printf("1. Find Match\n2. Logout\nChoices : ");
             scanf("%s", commb);
+            printf("commb %s\n", commb);
             send(sock , commb, strlen(commb), 0 );
             if(strcmp(commb, "find") == 0) {
                 while(1) {
@@ -184,12 +186,14 @@ int main(int argc, char const *argv[]) {
                 memset(buffer, 0, 1024);
                 valread = read(sock , buffer, 1024);
                 if(strcmp(buffer, "menang") == 0) {
+                    // send(sock , "hasil", strlen("hasil"), 0 );
+                    send(sock , "die", strlen("die"), 0 );
                     printf("Game berakhir kamu menang\n");
                 }
                 if(strcmp(buffer, "kalah") == 0) {
                     printf("Game berakhir kamu kalah\n");
                 }
-
+                
                 screen = 2;
                 health = 100;
                 // printf("screen %d health refresh %d\n", screen, health);

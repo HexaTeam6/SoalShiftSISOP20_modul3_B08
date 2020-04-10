@@ -9,7 +9,7 @@
 #define PORT 8080
 
 pthread_t tid[100];
-int id_sock[2];
+int id_sock[100];
 int user = 0;
 int kalah;
 
@@ -103,8 +103,10 @@ void* player(void *arg) {
                 }
 
                 while(1) {
+                    // printf("buffer 106 %s\n", buffer);
                     memset(buffer, 0, 1024);
                     valread = read( new_socket, buffer, 1024);
+                    // printf("buffer 109 %s\n", buffer);
                     if (strcmp(buffer, "hit") == 0)
                     {
                         if(new_socket == id_sock[0])
@@ -116,7 +118,7 @@ void* player(void *arg) {
                             send(id_sock[0], "minus", 5, 0);
                         }
                     }
-                    if (strcmp(buffer, "die") == 0)
+                    else if (strcmp(buffer, "die") == 0 || strcmp(buffer, "diehasil") == 0)
                     {   
                         if(new_socket == id_sock[0])
                         {
@@ -130,11 +132,18 @@ void* player(void *arg) {
                         }
                         break;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
 
+                printf("buffer 135 %s\n", buffer);
                 memset(buffer, 0, 1024);
                 valread = read( new_socket, buffer, 1024);
+                printf("buffer 137 %s\n", buffer);
                 if(strcmp(buffer, "hasil") == 0) {
+                    
                     if(kalah == id_sock[0])
                     {
                         send(id_sock[1], "menang", 6, 0);
@@ -146,6 +155,7 @@ void* player(void *arg) {
                         send(id_sock[1], "kalah", 5, 0);
                     }
                 }
+                
                 
                 screen = 2;
                 user = 0;
