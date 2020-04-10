@@ -282,11 +282,13 @@ void pokedex(){
     else if (x == 2)
     {
         pthread_mutex_lock(&pokemonwrite);
+        berry--;
         for (int i = 0; i < 7; i++)
         {
             if (pokemonAP[i] != -1)
             {
                 pokemonAP[i] += 10;
+                printf("\n%d", pokemonAP[i]);
             }
         }
         pthread_mutex_unlock(&pokemonwrite);
@@ -301,10 +303,10 @@ void pokedex(){
 //menu shop
 void shop(){
     printf("Pokedollar: %d\n", pokedollar);
-    printf("No\tNama\tPunya\tStok\tHarga\n");
+    printf("No\tNama\t\tPunya\tStok\tHarga\n");
     printf("1\tLullaby Powder\t%-3d\t%-3d\t60\n", powder, *shm_powder);
     printf("2\tPokeball\t%-3d\t%-3d\t5\n", pokeball, *shm_pokeball);
-    printf("3\tBerry\t%-3d\t%-3d\t15\n", berry, *shm_berry);
+    printf("3\tBerry\t\t%-3d\t%-3d\t15\n", berry, *shm_berry);
     printf("4 Keluar\n");
     printf("Beli atau keluar: ");
     int x;
