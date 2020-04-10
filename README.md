@@ -149,6 +149,7 @@ List Nama Pokemon
 
 ### Penyelesaian
 
+---
 
 ## SOAL 2
 
@@ -374,6 +375,7 @@ int main(int argc, char const *argv[]) {
 
                 memset(buffer, 0, 1024);
                 valread = read( sock , buffer, 1024);
+                printf("142 %s\n", buffer);
                 if(strcmp(buffer, "login_berhasil") == 0) {
                     printf("Login success\n");
                     screen = 2;
@@ -393,6 +395,7 @@ int main(int argc, char const *argv[]) {
         if(screen == 2) {
             printf("1. Find Match\n2. Logout\nChoices : ");
             scanf("%s", commb);
+            printf("commb %s\n", commb);
             send(sock , commb, strlen(commb), 0 );
             if(strcmp(commb, "find") == 0) {
                 while(1) {
@@ -419,12 +422,14 @@ int main(int argc, char const *argv[]) {
                 memset(buffer, 0, 1024);
                 valread = read(sock , buffer, 1024);
                 if(strcmp(buffer, "menang") == 0) {
+                    // send(sock , "hasil", strlen("hasil"), 0 );
+                    send(sock , "die", strlen("die"), 0 );
                     printf("Game berakhir kamu menang\n");
                 }
                 if(strcmp(buffer, "kalah") == 0) {
                     printf("Game berakhir kamu kalah\n");
                 }
-
+                
                 screen = 2;
                 health = 100;
                 // printf("screen %d health refresh %d\n", screen, health);
@@ -440,6 +445,7 @@ int main(int argc, char const *argv[]) {
 
     return 0;
 }
+
 ```
 Berikut ini merupakan bagian kode untuk menjalan screen 1 pada client side dimana
 client akan dimintai inputan untuk login atau register. Setiap login atau register
@@ -511,6 +517,7 @@ kembali menuju screen 1.
 if(screen == 2) {
   printf("1. Find Match\n2. Logout\nChoices : ");
   scanf("%s", commb);
+  printf("commb %s\n", commb);
   send(sock , commb, strlen(commb), 0 );
   if(strcmp(commb, "find") == 0) {
       while(1) {
@@ -537,6 +544,8 @@ if(screen == 2) {
       memset(buffer, 0, 1024);
       valread = read(sock , buffer, 1024);
       if(strcmp(buffer, "menang") == 0) {
+          // send(sock , "hasil", strlen("hasil"), 0 );
+          send(sock , "die", strlen("die"), 0 );
           printf("Game berakhir kamu menang\n");
       }
       if(strcmp(buffer, "kalah") == 0) {
@@ -558,6 +567,62 @@ Ketika game dimulai, pada client ini akan membuat 2 thread dimana thread pertama
 akan menghandle inputan client yaitu spacebar, sedangkan thread kedua akan
 menghandle penerimaan buffer dari server apabila lawan main menyerang dan akan mengurangi
 health pemain. Setelah game berakhir, maka akan ditampilkan hasil dari game tersebut.
+Berikut adalah bagian kode yang dihandle 2 thread tersebut.
+```
+void* tapdetect(void *arg) {
+    temp = pthread_self();
+    int sock = *(int *)arg;
+    int c;   
+    tcgetattr( STDIN_FILENO, &oldt);
+    newt = oldt;
+    newt.c_lflag &= ~(ICANON);          
+    tcsetattr( STDIN_FILENO, TCSANOW, &newt);   // Merubah
+    while(game == 1) {   
+        c = getchar();
+        // putchar(c);
+        if(c == ' ') {
+            send(sock, "hit", 3, 0);
+            printf("hit !!\n");
+        }  
+    }             
+
+    return NULL;
+}
+
+void* healthdetect(void *arg) {
+    int sock = *(int *)arg;
+    int valread;
+    char msg[1024];
+    while(1) {
+        memset(msg, 0, 1024);
+        valread = read( sock , msg, 1024);
+        // printf("msg %s\n", msg);
+        if(strcmp(msg, "minus") == 0) {
+            health -= 10;
+            printf("Health %d\n", health);
+        }
+        if(health == 0)
+        {
+            // printf("sock %d kirim sinyal kalah\n", sock);
+            send(sock , "die", strlen("die"), 0 );
+            game = 0;
+            tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+            pthread_cancel(temp);
+            pthread_cancel(pthread_self());
+            break;
+        }
+        if(strcmp(msg, "stop") == 0) {
+            // printf("masuk stop\n");
+            game = 0;
+            tcsetattr( STDIN_FILENO, TCSANOW, &oldt);
+            pthread_cancel(temp);
+            pthread_cancel(pthread_self());
+            break;
+        }
+    }
+    return NULL;
+}
+```
 
 
 --- SERVER SIDE ---
@@ -576,7 +641,7 @@ Berikut ini merupakan kode dari `tapserver.c` untuk menjalankan server side.
 #define PORT 8080
 
 pthread_t tid[100];
-int id_sock[2];
+int id_sock[100];
 int user = 0;
 int kalah;
 
@@ -670,8 +735,10 @@ void* player(void *arg) {
                 }
 
                 while(1) {
+                    // printf("buffer 106 %s\n", buffer);
                     memset(buffer, 0, 1024);
                     valread = read( new_socket, buffer, 1024);
+                    // printf("buffer 109 %s\n", buffer);
                     if (strcmp(buffer, "hit") == 0)
                     {
                         if(new_socket == id_sock[0])
@@ -683,7 +750,7 @@ void* player(void *arg) {
                             send(id_sock[0], "minus", 5, 0);
                         }
                     }
-                    if (strcmp(buffer, "die") == 0)
+                    else if (strcmp(buffer, "die") == 0 || strcmp(buffer, "diehasil") == 0)
                     {   
                         if(new_socket == id_sock[0])
                         {
@@ -697,11 +764,18 @@ void* player(void *arg) {
                         }
                         break;
                     }
+                    else
+                    {
+                        break;
+                    }
                 }
 
+                printf("buffer 135 %s\n", buffer);
                 memset(buffer, 0, 1024);
                 valread = read( new_socket, buffer, 1024);
+                printf("buffer 137 %s\n", buffer);
                 if(strcmp(buffer, "hasil") == 0) {
+                    
                     if(kalah == id_sock[0])
                     {
                         send(id_sock[1], "menang", 6, 0);
@@ -713,6 +787,7 @@ void* player(void *arg) {
                         send(id_sock[1], "kalah", 5, 0);
                     }
                 }
+                
                 
                 screen = 2;
                 user = 0;
@@ -768,21 +843,6 @@ int main(int argc, char const *argv[]) {
     }
 
     return 0;
-}
-```
-Setiap client yang connect akan dijalankan oleh satu thread sendiri agar bisa multiclient.
-Fungsi tersebut diatur oleh bagian kode berikut. Socket dari masing - masing client akan
-dipassing ke fungsi yang dijalankan masing - masing thread.
-```
-int i = 0;
-while(1) {
-   if ((new_socket = accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen))<0) {
-       perror("accept");
-       exit(EXIT_FAILURE);
-   }
-   id_sock[i] = new_socket;
-   pthread_create(&(tid[i]), NULL, player, &new_socket);
-   i++;
 }
 ```
 Berikut merupakan bagian kode yang akan menghandle apabila login success dan register success.
@@ -867,8 +927,10 @@ if(screen == 2) {
       }
 
       while(1) {
+          // printf("buffer 106 %s\n", buffer);
           memset(buffer, 0, 1024);
           valread = read( new_socket, buffer, 1024);
+          // printf("buffer 109 %s\n", buffer);
           if (strcmp(buffer, "hit") == 0)
           {
               if(new_socket == id_sock[0])
@@ -880,7 +942,7 @@ if(screen == 2) {
                   send(id_sock[0], "minus", 5, 0);
               }
           }
-          if (strcmp(buffer, "die") == 0)
+          else if (strcmp(buffer, "die") == 0 || strcmp(buffer, "diehasil") == 0)
           {   
               if(new_socket == id_sock[0])
               {
@@ -894,11 +956,18 @@ if(screen == 2) {
               }
               break;
           }
+          else
+          {
+              break;
+          }
       }
 
+      printf("buffer 135 %s\n", buffer);
       memset(buffer, 0, 1024);
       valread = read( new_socket, buffer, 1024);
+      printf("buffer 137 %s\n", buffer);
       if(strcmp(buffer, "hasil") == 0) {
+
           if(kalah == id_sock[0])
           {
               send(id_sock[1], "menang", 6, 0);
@@ -911,6 +980,7 @@ if(screen == 2) {
           }
       }
 
+
       screen = 2;
       user = 0;
   }
@@ -920,6 +990,10 @@ if(screen == 2) {
   }
 }
 ```
+### Revisi
+- Fitur replay find match sudah bisa
+
+---
 
 ## SOAL 3
 
@@ -1435,6 +1509,8 @@ Untuk menghandle argumen yang diberikan salah dengan cara :
 - `else if(strcmp(argv[1], "*") == 0 && argc == 2) { ... }` untuk argumen dengan opsi `\*`
 - `else if(strcmp(argv[1], "-d") == 0 && argc == 3) { ... }` untuk argumen dengan opsi `-d`
 - `else { printf("Option or arguments are not valid\n"); }` untuk argumen selain opsi yang diminta.
+
+---
 
 ## SOAL 4
 
