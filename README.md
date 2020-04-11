@@ -765,7 +765,7 @@ pada kodingan diatas kita membuat menu untuk normal mode dan capture mode dimana
 dijalankan menggunakan _thread_ pada baris `pthread_create(&inputthread, NULL, finputthread, NULL);pthread_join(inputthread, NULL);`dengan tujuan agar saat menemukan pokemon menu bisa langsung di
 hentikan request menu tersebut.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 void *fthreadcari(){
     while (1){
@@ -789,7 +789,7 @@ void *fthreadcari(){
 fungsi diatas merupakan fungsi _thread_ untuk mencari pokemon dengan menggunakan peluang menemukan 
 pokemon 60% setiap 10 detik. Serta di peroleh id pokemon secara random melalui shared memori.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 void *fthreadcapture(){
     int thres = (id_pokemon % 15) / 5;
@@ -813,7 +813,7 @@ void *fthreadcapture(){
 fungsi diatas merupakan fungsi _thread_ untuk menentukan peluang 
 pokemon tersebut melarikan diri sesuai jenisnya.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 void tangkap(){
     if (id_pokemon == -1){
@@ -874,7 +874,7 @@ pengecekkan pokeball yang dimiliki. Serta pada proses penangakapan pokemon punya
 sesuai dengan jenisnya masing masing. Ada batasan untuk menyimpan pokemon, yaitu 7 pokemon. Lalu jika melebihi batas
 tersebut pokemon yang ditangkap akan diganti dengan pokedollar sesuai dengan jenisnya.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 void *fpokemonthread(){
     int slot = pokeslot;
@@ -901,7 +901,7 @@ fungsi diatas merupakan fungsi _thread_ untuk membuat AP pokemon berkurang 10AP/
 Dimana saat APnya sudah mencapai 0 maka pokemon tersebut memilik peluang 90% lepas jika tidak
 APnya akan ter-set 50.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 void pokedex(){
     printf("Slot Pokemon Affection Points\n");
@@ -976,7 +976,7 @@ serta APnya. Terdapat opsi melepas yang digunakan untuk melepas pokemon yang dii
 akan mendapatkan pokedollar sesuai dengan jenis pokemonnya. Lalu opsi beri bery
 digunakan untuk menambah seluruh AP pokemon yang dimiliki dengan 10AP.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 // menu use item
 void useitem(){
@@ -1000,7 +1000,7 @@ void useitem(){
 ````
 fungsi diatas merupakan fungsi untuk menggunakan item saat capture mode.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 void *fpowderthread(){
     while (1) sleep(10);
@@ -1012,7 +1012,7 @@ void *fpowderthread(){
 fungsi diatas merupakan fungsi _thread_ untuk menentukan powder yang dipakai bertahan 
 efeknya selama 10 detik.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 void shop(){
     printf("Pokedollar: %d\n", pokedollar);
@@ -1069,7 +1069,7 @@ membeli beberapa item seperti powder, berry, dan pokeball. Pada menu tersebut
 diperlihatkan pula berapa yang kita miliki, uang, stock, harga item. dimana kita hanya dapat
 memiliki 99 item serta stock pada menu akan bertambah setiap 10detik yang di atur oleh program _soal1_pokezone.c_.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
 void cleanup(){
     shmdt(shm_id_pokemon);
@@ -1125,7 +1125,7 @@ void *fpokerandomthread(){
 fungsi diatas merupakan fungsi _thread_ untuk mendapatkan random pokemon sesuai dengan ratenya masing masing
 dan nantinya akan dikirimkan ke _soal1_traizone.c_ melalui shared memory.
 
-selanjutnya bagian,
+Selanjutnya bagian,
 ````
  printf("1. Quit game\nInput: ");
     int x;
@@ -2001,8 +2001,7 @@ if(screen == 2) {
   }
 }
 ```
-### Revisi
-- Fitur replay find match sudah bisa
+Apabila match selesai maka client akan dikembalikan ke screen 2.
 
 ---
 
